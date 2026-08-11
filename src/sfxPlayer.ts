@@ -14,7 +14,6 @@ const SfxLife = engine.defineComponent('local-sfx-life', {
 const SCORE_SOUNDS = [
   'sounds/big-shaq-boom.mp3',
   'sounds/FAAAAH.mp3',
-  'sounds/taco-bell-bong.mp3',
   'sounds/angels.mp3',
   'sounds/chipmunk.mp3',
   'sounds/emotionaldamage.mp3',
@@ -33,6 +32,7 @@ const SCORE_SOUNDS = [
 const AMOGUS = 'sounds/amogus.mp3'
 const PRICE_IS_WRONG = 'sounds/priceiswrong.mp3'
 const THUD = 'sounds/thud.mp3'
+const TACO_BELL_BONG = 'sounds/taco-bell-bong.mp3'
 
 function playLocalClip(url: string, volume = 0.9, ttl = 4) {
   const entity = engine.addEntity()
@@ -78,6 +78,11 @@ export function playPriceIsWrongSfx() {
 /** Lightning / Fanum warning only. */
 export function playThudSfx() {
   playLocalClip(THUD, 1, 2)
+}
+
+/** Bonus orb (+777) pickup only. */
+export function playBonusSfx() {
+  playLocalClip(TACO_BELL_BONG, 1, 4)
 }
 
 export function sfxSystem(dt: number) {

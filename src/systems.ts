@@ -38,7 +38,7 @@ import {
 import { submitRunScore, tickLeaderboard } from './leaderboard'
 import { startGameMusic, stopGameMusic, tickGameMusic } from './musicPlayer'
 import { spawnScorePopup } from './scorePopup'
-import { playAmogusSfx, playPriceIsWrongSfx, playScoreSfx } from './sfxPlayer'
+import { playAmogusSfx, playBonusSfx, playPriceIsWrongSfx, playScoreSfx } from './sfxPlayer'
 
 let chaosTimer = 0
 let bossAngle = 0
@@ -139,7 +139,7 @@ export function fireGyattButton() {
   gameState.comboTimer = COMBO_WINDOW
   gameState.chaos = { text: `+${gained}`, ttl: 1.6 }
   gameState.announcementFlash = 0.4
-  playScoreSfx()
+  playBonusSfx()
 
   // Spawn a few freebies after the scream
   spawnBrainrot('gyatt')
