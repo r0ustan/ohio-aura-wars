@@ -34,16 +34,16 @@
       "default": true,
       "position": {
         "x": [
-          22,
-          26
+          1.75,
+          5.75
         ],
         "y": [
           0,
           0
         ],
         "z": [
-          22,
-          26
+          1.75,
+          5.75
         ]
       },
       "cameraTarget": {
@@ -69,5 +69,8 @@
   "source": {
     "origin": "creator-hub",
     "projectId": "0cd4c0fc-5925-466c-b44a-329f99768d20"
+  },
+  "worldConfiguration": {
+    "name": "brainrot.dcl.eth"
   }
 }

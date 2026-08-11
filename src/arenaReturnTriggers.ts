@@ -9,9 +9,12 @@ import { Vector3 } from '@dcl/sdk/math'
 import { movePlayerTo } from '~system/RestrictedActions'
 import { gameState } from './gameState'
 
-/** Matches scene.json default spawn (mid-arena pad) */
-export const SPAWN_POS = Vector3.create(24, 1.5, 24)
-export const SPAWN_LOOK = Vector3.create(24, 1.5, 30)
+/**
+ * OOB / death return target — Creator Hub spawn area (SW), not mid-arena.
+ * Do not edit scene.json spawnPoints from code; keep these in sync manually.
+ */
+export const SPAWN_POS = Vector3.create(3.75, 1.5, 3.75)
+export const SPAWN_LOOK = Vector3.create(24, 1, 30)
 
 const RETURN_LINES = [
   'NO CAP YOU CLIPPED OUT OF OHIO',
