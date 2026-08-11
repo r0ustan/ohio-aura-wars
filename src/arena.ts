@@ -825,9 +825,9 @@ export function tickBonusPad(dt: number, cooldown: number, playing: boolean) {
   const bob = Math.sin(bonusBobPhase * 1.7) * BONUS_FLOAT_AMP
   const y = BONUS_BASE_Y + bob
   const pulse = 1 + 0.08 * Math.sin(bonusBobPhase * 4.2)
-  const spinY = bonusBobPhase * 48
-  const spinX = Math.sin(bonusBobPhase * 0.65) * 22
-  const spinZ = Math.cos(bonusBobPhase * 0.5) * 16
+  const spinY = bonusBobPhase * 160
+  const spinX = Math.sin(bonusBobPhase * 1.4) * 28
+  const spinZ = Math.cos(bonusBobPhase * 1.1) * 22
 
   const root = Transform.getMutable(bonusRoot)
   root.position.x = bonusX
