@@ -64,10 +64,12 @@ const CHASE_RADIUS = 15
 const CHASE_ACCEL = 3.4
 const CHASE_MAX_SPEED = 1.35
 /** Extra swarm when the player is idle (multiplies accel / max speed) */
-const STILL_SWARM_ACCEL = 3.2
-const STILL_SWARM_MAX = 4.2
+const STILL_SWARM_ACCEL = 1.6
+const STILL_SWARM_MAX = 2.0
 /** Horizontal speed above this counts as fully moving (no swarm bonus) */
 const PLAYER_STILL_REF = 3.2
+/** Extra chase range while standing still */
+const STILL_SWARM_RANGE = 3
 
 function maxGood() {
   return isMobile() ? MAX_GOOD_MOBILE : MAX_GOOD_DESKTOP
@@ -558,7 +560,7 @@ export function brainrotSystem(dt: number) {
   const stillFactor = Math.max(0, 1 - playerMoveSpeed / PLAYER_STILL_REF)
   const chaseAccel = CHASE_ACCEL * (1 + stillFactor * STILL_SWARM_ACCEL)
   const chaseMax = CHASE_MAX_SPEED * (1 + stillFactor * STILL_SWARM_MAX)
-  const chaseRange = CHASE_RADIUS + stillFactor * 6
+  const chaseRange = CHASE_RADIUS + stillFactor * STILL_SWARM_RANGE
 
   for (const [entity] of engine.getEntitiesWith(Brainrot, Transform)) {
     if (!active.has(entity)) continue
