@@ -430,7 +430,7 @@ export function buildFanumCharacter(root: Entity) {
     material: glow('#39ff14', 3.5)
   })
   if (simpleBuild) {
-    scoreTag(root, '-375', '#ff2244', 2.75)
+    scoreTag(root, '-222', '#ff2244', 2.75)
     return
   }
   for (const x of [-0.28, 0.28]) {
@@ -497,10 +497,10 @@ export function buildFanumCharacter(root: Entity) {
       material: glow('#8b0000', 2.0)
     })
   }
-  scoreTag(root, '-375', '#ff2244', 2.75)
+  scoreTag(root, '-222', '#ff2244', 2.75)
 }
 
-/** Soft cool chibi sigma — larger + emissive so it reads as a rare pickup */
+/** Soft cool chibi sigma — larger + emissive body; rainbow vomit on the shirt */
 export function buildSigmaCharacter(root: Entity) {
   const s = 1.28
   part({
@@ -526,12 +526,13 @@ export function buildSigmaCharacter(root: Entity) {
       material: glow('#ffd700', 3.2)
     })
   }
+  // Head — no emission (skin stays matte)
   part({
     parent: root,
     pos: Vector3.create(0, 1.3 * s, 0),
     scale: Vector3.create(0.9 * s, 0.9 * s, 0.9 * s),
     shape: 'sphere',
-    material: glow('#ffe0c8', 0.85, 0.4)
+    material: plastic('#ffe0c8')
   })
   cuteFace(root, 1.3 * s)
   // Gold frames — keep clear of Fanum black
@@ -542,6 +543,10 @@ export function buildSigmaCharacter(root: Entity) {
     shape: 'box',
     material: glow('#e8c04a', 2.8, 0.25)
   })
+
+  // Rainbow vomit streaming from mouth onto the shirt
+  addSigmaRainbowVomit(root, 1.3 * s, s)
+
   if (simpleBuild) {
     scoreTag(root, '+320', '#ffd700', 2.2 * s)
     return
@@ -569,7 +574,7 @@ export function buildSigmaCharacter(root: Entity) {
       scale: Vector3.create(0.18 * s, 0.35 * s, 0.18 * s),
       rot: Vector3.create(40, 0, x < 0 ? 15 : -15),
       shape: 'sphere',
-      material: glow('#ffe0c8', 0.7, 0.4)
+      material: plastic('#ffe0c8')
     })
   }
   for (const x of [-0.18, 0.18]) {
@@ -582,6 +587,58 @@ export function buildSigmaCharacter(root: Entity) {
     })
   }
   scoreTag(root, '+320', '#ffd700', 2.55 * s)
+}
+
+/** Glowy rainbow stream from the mouth dripping down the chest. */
+function addSigmaRainbowVomit(parent: Entity, headY: number, s: number) {
+  const colors = ['#ff2244', '#ff8a1a', '#ffe566', '#3dff7a', '#4ec4ff', '#c45eff', '#ff66cc']
+  const mouthY = headY - 0.2
+  const mouthZ = 0.5
+  const count = simpleBuild ? 5 : colors.length
+
+  for (let i = 0; i < count; i++) {
+    const t = i / Math.max(1, count - 1)
+    const wobble = Math.sin(i * 1.7) * 0.04 * s
+    part({
+      parent,
+      pos: Vector3.create(wobble, mouthY - t * 0.72 * s, mouthZ - t * 0.12 * s),
+      scale: Vector3.create(
+        (0.1 + t * 0.12) * s,
+        (0.08 + t * 0.06) * s,
+        (0.1 + t * 0.1) * s
+      ),
+      rot: Vector3.create(18 + t * 35, wobble * 120, (i % 2 === 0 ? -1 : 1) * (8 + t * 12)),
+      shape: 'sphere',
+      material: glow(colors[i % colors.length], 2.4 + t, 0.25)
+    })
+  }
+
+  // Shirt splats
+  const splats = simpleBuild
+    ? ([
+        [0.02, 0.58, 0.28, '#ff2244'],
+        [-0.08, 0.42, 0.26, '#3dff7a'],
+        [0.1, 0.36, 0.24, '#c45eff']
+      ] as const)
+    : ([
+        [0.02, 0.62, 0.3, '#ff2244'],
+        [-0.12, 0.48, 0.28, '#ffe566'],
+        [0.14, 0.44, 0.27, '#4ec4ff'],
+        [-0.04, 0.34, 0.26, '#ff66cc'],
+        [0.08, 0.28, 0.25, '#3dff7a'],
+        [-0.1, 0.24, 0.24, '#ff8a1a']
+      ] as const)
+
+  for (const [x, y, z, hex] of splats) {
+    part({
+      parent,
+      pos: Vector3.create(x * s, y * s, z * s),
+      scale: Vector3.create(0.16 * s, 0.1 * s, 0.06 * s),
+      rot: Vector3.create(70, x * 80, 12),
+      shape: 'sphere',
+      material: glow(hex, 2.8, 0.22)
+    })
+  }
 }
 
 export function buildCharacterVisual(kind: BrainrotKind, root: Entity, parts?: Entity[]) {
@@ -619,6 +676,6 @@ export const KIND_META: Record<
   skibidi: { value: 100, weight: 26, good: true },
   gyatt: { value: 220, weight: 12, good: true },
   // Fanums spawn on a fixed global timer — keep weight 0 so ambient rolls stay positive
-  fanum: { value: -375, weight: 0, good: false },
-  sigma: { value: 320, weight: 4, good: true }
+  fanum: { value: -222, weight: 0, good: false },
+  sigma: { value: 320, weight: 1, good: true }
 }

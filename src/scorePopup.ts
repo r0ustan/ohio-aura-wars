@@ -25,21 +25,30 @@ function easeOutCubic(t: number) {
 }
 
 /** Big expanding +/− popup over a character that floats up and fades out. */
-export function spawnScorePopup(worldPos: Vector3, amount: number, good: boolean) {
+export function spawnScorePopup(
+  worldPos: Vector3,
+  amount: number,
+  good: boolean,
+  opts?: { fontSize?: number; ttl?: number; lift?: number }
+) {
   const value = Math.floor(amount)
   if (value === 0) return
+
+  const fontSize = opts?.fontSize ?? 4.2
+  const ttl = opts?.ttl ?? 1.15
+  const lift = opts?.lift ?? 2.3
 
   const label = good ? `+${Math.abs(value)}` : `-${Math.abs(value)}`
   const entity = engine.addEntity()
 
   Transform.create(entity, {
-    position: Vector3.create(worldPos.x, worldPos.y + 2.3, worldPos.z),
+    position: Vector3.create(worldPos.x, worldPos.y + lift, worldPos.z),
     scale: Vector3.create(0.35, 0.35, 0.35)
   })
   Billboard.create(entity, { billboardMode: BillboardMode.BM_Y })
   TextShape.create(entity, {
     text: label,
-    fontSize: 4.2,
+    fontSize,
     textColor: good ? GREEN : RED,
     outlineWidth: 0.22,
     outlineColor: Color4.Black(),
@@ -48,8 +57,8 @@ export function spawnScorePopup(worldPos: Vector3, amount: number, good: boolean
 
   ScorePopup.create(entity, {
     age: 0,
-    ttl: 1.15,
-    baseY: worldPos.y + 2.3,
+    ttl,
+    baseY: worldPos.y + lift,
     good
   })
 }

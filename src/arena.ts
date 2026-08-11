@@ -94,11 +94,11 @@ let bonusWasPlaying = false
 /** Pickup + visual scale for Tron Bit */
 const BONUS_PICKUP_RADIUS = 5.0
 const BONUS_ROOT_SCALE = 1.24
-/** High enough that standing won't reach — jump required */
-const BONUS_BASE_Y = 4.35
-const BONUS_FLOAT_AMP = 0.45
-/** Player feet must clear this to collect (approx jump height) */
-const BONUS_MIN_PLAYER_Y = 2.35
+/** Reachable while walking — no jump required */
+const BONUS_BASE_Y = 1.85
+const BONUS_FLOAT_AMP = 0.35
+/** Grounded players can collect */
+const BONUS_MIN_PLAYER_Y = 0
 /** Prevent re-trigger while still standing inside the orb after pickup */
 let bonusInsideLatch = false
 

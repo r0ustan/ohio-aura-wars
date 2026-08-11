@@ -63,6 +63,11 @@ const CHASE_RADIUS = 15
 /** Soft accel toward nearest player (balances FRICTION → ~1.2 u/s crawl) */
 const CHASE_ACCEL = 3.4
 const CHASE_MAX_SPEED = 1.35
+/** Extra swarm when the player is idle (multiplies accel / max speed) */
+const STILL_SWARM_ACCEL = 3.2
+const STILL_SWARM_MAX = 4.2
+/** Horizontal speed above this counts as fully moving (no swarm bonus) */
+const PLAYER_STILL_REF = 3.2
 
 function maxGood() {
   return isMobile() ? MAX_GOOD_MOBILE : MAX_GOOD_DESKTOP
@@ -539,6 +544,11 @@ export function brainrotSystem(dt: number) {
   const toCollect: Entity[] = []
   const damp = Math.exp(-FRICTION * dt)
   const goodReplicateDt = dt * multiplySpeed
+  const playerMoveSpeed = Math.sqrt(playerVx * playerVx + playerVz * playerVz)
+  const stillFactor = Math.max(0, 1 - playerMoveSpeed / PLAYER_STILL_REF)
+  const chaseAccel = CHASE_ACCEL * (1 + stillFactor * STILL_SWARM_ACCEL)
+  const chaseMax = CHASE_MAX_SPEED * (1 + stillFactor * STILL_SWARM_MAX)
+  const chaseRange = CHASE_RADIUS + stillFactor * 6
 
   for (const [entity] of engine.getEntitiesWith(Brainrot, Transform)) {
     if (!active.has(entity)) continue
@@ -586,17 +596,17 @@ export function brainrotSystem(dt: number) {
         const dz = nearest.z - t.position.z
         const dist = Math.sqrt(dx * dx + dz * dz)
         const slideNow = Math.sqrt(motion.vx * motion.vx + motion.vz * motion.vz)
-        if (dist > 1.0 && dist < CHASE_RADIUS && slideNow < 4.5) {
+        if (dist > 1.0 && dist < chaseRange && slideNow < chaseMax + 2.5) {
           chasing = true
           const nx = dx / dist
           const nz = dz / dist
-          motion.vx += nx * CHASE_ACCEL * dt
-          motion.vz += nz * CHASE_ACCEL * dt
+          motion.vx += nx * chaseAccel * dt
+          motion.vz += nz * chaseAccel * dt
           chaseYaw = (Math.atan2(nx, nz) * 180) / Math.PI
 
           const after = Math.sqrt(motion.vx * motion.vx + motion.vz * motion.vz)
-          if (after > CHASE_MAX_SPEED && slideNow < CHASE_MAX_SPEED + 0.5) {
-            const s = CHASE_MAX_SPEED / after
+          if (after > chaseMax && slideNow < chaseMax + 0.5) {
+            const s = chaseMax / after
             motion.vx *= s
             motion.vz *= s
           }
