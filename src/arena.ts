@@ -69,8 +69,10 @@ let onBonusCallback: (() => void) | null = null
 let bossChompPhase = 0
 let bossWavePhase = 0
 let startControlsShown = true
+let startOrbPulsePhase = 0
 
 const START_ORB_SCALE = 1.35
+const START_ORB_Y = 1.55
 const START_BASE_LOWER = { w: 2.8, h: 0.7 }
 const START_BASE_UPPER = { w: 2.1, h: 0.2 }
 /** One collider covering both pedestal cylinders */
@@ -194,6 +196,22 @@ export function setStartControlsVisible(enabled: boolean) {
     } else if (MeshCollider.has(howHitbox)) {
       MeshCollider.deleteFrom(howHitbox)
     }
+  }
+}
+
+/** Soft scale + glow pulse for the green PLAY orb. */
+export function tickStartOrb(dt: number) {
+  if (!Transform.has(startButton)) return
+  startOrbPulsePhase += dt * 3.4
+  const pulse = 1 + Math.sin(startOrbPulsePhase) * 0.14
+  const bob = Math.sin(startOrbPulsePhase * 0.85) * 0.1
+  const s = START_ORB_SCALE * pulse
+  const t = Transform.getMutable(startButton)
+  t.scale = Vector3.create(s, s, s)
+  t.position.y = START_ORB_Y + bob
+
+  if (Material.has(startButton)) {
+    Material.setPbrMaterial(startButton, glow('#5dff7a', 2.4 + Math.sin(startOrbPulsePhase * 1.6) * 1.1))
   }
 }
 
@@ -653,7 +671,7 @@ function buildStartPedestal() {
 
   startButton = engine.addEntity()
   Transform.create(startButton, {
-    position: Vector3.create(24, 1.55, 24),
+    position: Vector3.create(24, START_ORB_Y, 24),
     scale: Vector3.create(START_ORB_SCALE, START_ORB_SCALE, START_ORB_SCALE)
   })
   MeshRenderer.setSphere(startButton)
@@ -844,9 +862,15 @@ export function tickBonusPad(dt: number, cooldown: number, playing: boolean) {
     bonusInsideLatch = false
   }
 
-  bonusBobPhase += dt * 3.2
-  const bob = Math.sin(bonusBobPhase) * 0.22
-  const pulse = 1 + Math.sin(bonusBobPhase * 2.6) * 0.12
+  bonusBobPhase += dt * 4.4
+  // Heartbeat-style pulse: lub-dub then rest
+  const cycle = (bonusBobPhase * 0.55) % 1
+  const lub = Math.exp(-Math.pow(cycle * 18, 2))
+  const dub = Math.exp(-Math.pow((cycle - 0.16) * 18, 2))
+  const beat = lub + 0.7 * dub
+  const pulse = 1 + 0.28 * beat
+  const glowPulse = 4.5 + 5.5 * beat
+  const bob = Math.sin(bonusBobPhase * 0.85) * 0.28
   const y = 1.7 + bob
 
   const coreT = Transform.getMutable(bonusCore)
@@ -854,22 +878,49 @@ export function tickBonusPad(dt: number, cooldown: number, playing: boolean) {
   coreT.position.z = bonusZ
   coreT.position.y = y
   coreT.scale = Vector3.create(BONUS_CORE * pulse, BONUS_CORE * pulse, BONUS_CORE * pulse)
+  Material.setPbrMaterial(bonusCore, glow('#ffcc00', glowPulse))
 
   if (Transform.has(bonusShell)) {
     const s = Transform.getMutable(bonusShell)
     s.position.x = bonusX
     s.position.z = bonusZ
     s.position.y = y
-    const sp = BONUS_SHELL * (1 + Math.sin(bonusBobPhase * 2.1 + 1) * 0.08)
+    const sp = BONUS_SHELL * (1 + 0.18 * beat)
     s.scale = Vector3.create(sp, sp, sp)
+    Material.setPbrMaterial(bonusShell, {
+      albedoColor: Color4.create(1, 0.78, 0.05, 0.28 + 0.2 * beat),
+      emissiveColor: Color3.create(1, 0.8, 0.0),
+      emissiveIntensity: 3.5 + 4.5 * beat,
+      metallic: 0.05,
+      roughness: 0.25,
+      transparencyMode: 1
+    })
   }
   if (Transform.has(bonusAura)) {
     const a = Transform.getMutable(bonusAura)
     a.position.x = bonusX
     a.position.z = bonusZ
     a.position.y = y
-    const ap = BONUS_AURA * (1 + Math.sin(bonusBobPhase * 1.7 + 2) * 0.06)
+    const ap = BONUS_AURA * (1 + 0.14 * beat)
     a.scale = Vector3.create(ap, ap, ap)
+    Material.setPbrMaterial(bonusAura, {
+      albedoColor: Color4.create(1, 0.72, 0.0, 0.1 + 0.12 * beat),
+      emissiveColor: Color3.create(1, 0.75, 0.05),
+      emissiveIntensity: 1.8 + 2.8 * beat,
+      metallic: 0,
+      roughness: 1,
+      transparencyMode: 1
+    })
+  }
+  if (Transform.has(bonusRing)) {
+    const ringPulse = 1 + 0.12 * beat
+    Transform.getMutable(bonusRing).position = Vector3.create(bonusX, 0.08, bonusZ)
+    Transform.getMutable(bonusRing).scale = Vector3.create(
+      BONUS_RING * ringPulse,
+      0.14,
+      BONUS_RING * ringPulse
+    )
+    Material.setPbrMaterial(bonusRing, glow('#ffb000', 1.6 + 2.2 * beat))
   }
   if (Transform.has(bonusSparks)) {
     const sp = Transform.getMutable(bonusSparks)
@@ -882,9 +933,6 @@ export function tickBonusPad(dt: number, cooldown: number, playing: boolean) {
     lb.position.x = bonusX
     lb.position.y = y + 2.4
     lb.position.z = bonusZ
-  }
-  if (Transform.has(bonusRing)) {
-    Transform.getMutable(bonusRing).position = Vector3.create(bonusX, 0.08, bonusZ)
   }
 
   if (!Transform.has(engine.PlayerEntity)) {
