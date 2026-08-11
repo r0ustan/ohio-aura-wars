@@ -18,6 +18,7 @@ import {
 import { isMobile } from '@dcl/sdk/platform'
 import { Color3, Color4, Quaternion, Vector3 } from '@dcl/sdk/math'
 import { ceramic, glow, plastic, solid } from './materials'
+import { buildArenaReturnTriggers } from './arenaReturnTriggers'
 
 export const FloorTile = engine.defineComponent('crazy-floor-tile', {
   baseY: Schemas.Number,
@@ -214,6 +215,7 @@ export function buildArena() {
   buildStartPedestal()
   buildBonusPedestal()
   buildBossToilet()
+  buildArenaReturnTriggers()
 }
 
 const SOLID_COLLISION = ColliderLayer.CL_PHYSICS | ColliderLayer.CL_POINTER

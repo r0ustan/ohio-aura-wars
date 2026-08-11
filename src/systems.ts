@@ -45,10 +45,13 @@ let bossAngle = 0
 let bossTaxCooldown = 0
 let containCooldown = 0
 
-/** Soft clamp if physics yeets the avatar past the walls / into the sky */
-const PLAYER_ARENA_MIN = 1.6
-const PLAYER_ARENA_MAX = 46.4
-const PLAYER_MAX_Y = 10
+/**
+ * Playable floor is roughly 3–45. If Fanum/boss physics yeets the avatar past
+ * the walls (or into the sky / void), hard-teleport back inside so the run continues.
+ */
+const PLAYER_ARENA_MIN = 2.5
+const PLAYER_ARENA_MAX = 45.5
+const PLAYER_MAX_Y = 8
 
 function containPlayerInArena(dt: number) {
   containCooldown = Math.max(0, containCooldown - dt)
@@ -56,34 +59,20 @@ function containPlayerInArena(dt: number) {
   if (!Transform.has(engine.PlayerEntity)) return
 
   const p = Transform.get(engine.PlayerEntity).position
-  let x = p.x
-  let y = p.y
-  let z = p.z
-  let fix = false
+  const outX = p.x < PLAYER_ARENA_MIN || p.x > PLAYER_ARENA_MAX
+  const outZ = p.z < PLAYER_ARENA_MIN || p.z > PLAYER_ARENA_MAX
+  const outY = p.y > PLAYER_MAX_Y || p.y < -0.25
+  if (!outX && !outZ && !outY) return
 
-  if (x < PLAYER_ARENA_MIN) {
-    x = PLAYER_ARENA_MIN + 0.8
-    fix = true
-  } else if (x > PLAYER_ARENA_MAX) {
-    x = PLAYER_ARENA_MAX - 0.8
-    fix = true
+  // Always dump on center — safer than wall-edge clamps after death / yeets
+  containCooldown = 0.55
+  if (gameState.phase === 'playing') {
+    gameState.chaos = { text: 'BACK IN THE ARENA!', ttl: 1.2 }
+    gameState.announcementFlash = 0.25
   }
-  if (z < PLAYER_ARENA_MIN) {
-    z = PLAYER_ARENA_MIN + 0.8
-    fix = true
-  } else if (z > PLAYER_ARENA_MAX) {
-    z = PLAYER_ARENA_MAX - 0.8
-    fix = true
-  }
-  if (y > PLAYER_MAX_Y || y < -0.5) {
-    y = 1.2
-    fix = true
-  }
-
-  if (!fix) return
-  containCooldown = 0.4
   void movePlayerTo({
-    newRelativePosition: Vector3.create(x, Math.max(0.4, y), z)
+    newRelativePosition: Vector3.create(ARENA_CENTER.x, 1.5, ARENA_CENTER.z),
+    cameraTarget: Vector3.create(ARENA_CENTER.x, 1.5, ARENA_CENTER.z + 6)
   }).catch(() => undefined)
 }
 
@@ -107,6 +96,11 @@ function finishRun() {
   submitRunScore(peak)
   updateScoreboard()
   setStartControlsVisible(true)
+  // Death can leave you stuck outside walls — snap back to the play pad
+  void movePlayerTo({
+    newRelativePosition: Vector3.create(ARENA_CENTER.x, 1.5, ARENA_CENTER.z),
+    cameraTarget: Vector3.create(ARENA_CENTER.x, 1.5, ARENA_CENTER.z + 6)
+  }).catch(() => undefined)
   void triggerEmote({
     predefinedEmote: peak >= 5000 ? 'clap' : 'wave'
   }).catch(() => undefined)
