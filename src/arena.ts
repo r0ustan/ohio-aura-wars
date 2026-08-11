@@ -825,9 +825,9 @@ export function tickBonusPad(dt: number, cooldown: number, playing: boolean) {
   const bob = Math.sin(bonusBobPhase * 1.7) * BONUS_FLOAT_AMP
   const y = BONUS_BASE_Y + bob
   const pulse = 1 + 0.08 * Math.sin(bonusBobPhase * 4.2)
-  const spinY = bonusBobPhase * 160
-  const spinX = Math.sin(bonusBobPhase * 1.4) * 28
-  const spinZ = Math.cos(bonusBobPhase * 1.1) * 22
+  const spinY = bonusBobPhase * 480
+  const spinX = Math.sin(bonusBobPhase * 4.2) * 28
+  const spinZ = Math.cos(bonusBobPhase * 3.3) * 22
 
   const root = Transform.getMutable(bonusRoot)
   root.position.x = bonusX
@@ -841,7 +841,7 @@ export function tickBonusPad(dt: number, cooldown: number, playing: boolean) {
   )
 
   // Morph across soft → mid → star → soft (Bit-style shape shifts)
-  const cycle = (bonusBobPhase * 0.85) % 3
+  const cycle = (bonusBobPhase * 2.55) % 3
   const i0 = Math.floor(cycle) % 3
   const i1 = (i0 + 1) % 3
   const t = cycle - Math.floor(cycle)
