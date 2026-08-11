@@ -4,6 +4,7 @@ import {
   ColliderLayer,
   engine,
   Entity,
+  GltfContainer,
   InputAction,
   Material,
   MeshCollider,
@@ -81,8 +82,7 @@ const HOW_HIT_H = 1.0
 const HOW_HIT_Y = 0.5
 
 let bonusRoot: Entity
-let bonusCore: Entity
-let bonusSpikes: Entity[] = []
+let bonusBits: Entity[] = []
 let bonusSparks: Entity
 let bonusLabel: Entity
 let bonusReady = false
@@ -91,10 +91,9 @@ let bonusX = 40
 let bonusZ = 24
 let bonusHopTimer = 10
 let bonusWasPlaying = false
-/** Pickup + visual scale for the Tron-bit star */
+/** Pickup + visual scale for Tron Bit */
 const BONUS_PICKUP_RADIUS = 5.0
-const BONUS_ROOT_SCALE = 1.35
-const BONUS_CORE = 0.85
+const BONUS_ROOT_SCALE = 1.55
 /** High enough that standing won't reach — jump required */
 const BONUS_BASE_Y = 4.35
 const BONUS_FLOAT_AMP = 0.45
@@ -103,33 +102,7 @@ const BONUS_MIN_PLAYER_Y = 2.35
 /** Prevent re-trigger while still standing inside the orb after pickup */
 let bonusInsideLatch = false
 
-/** Spike directions: 6 octahedron axes + 8 cube corners (Christmas / Tron bit). */
-const BONUS_SPIKE_DIRS: Vector3[] = (() => {
-  const dirs: Vector3[] = [
-    Vector3.create(1, 0, 0),
-    Vector3.create(-1, 0, 0),
-    Vector3.create(0, 1, 0),
-    Vector3.create(0, -1, 0),
-    Vector3.create(0, 0, 1),
-    Vector3.create(0, 0, -1)
-  ]
-  for (const x of [-1, 1]) {
-    for (const y of [-1, 1]) {
-      for (const z of [-1, 1]) {
-        const len = Math.sqrt(3)
-        dirs.push(Vector3.create(x / len, y / len, z / len))
-      }
-    }
-  }
-  return dirs
-})()
-
-function orientSpike(dir: Vector3) {
-  const yaw = (Math.atan2(dir.x, dir.z) * 180) / Math.PI
-  const flat = Math.sqrt(dir.x * dir.x + dir.z * dir.z)
-  const pitch = (Math.atan2(-dir.y, flat) * 180) / Math.PI
-  return Quaternion.fromEulerDegrees(pitch, yaw, 0)
-}
+const BIT_MODELS = ['models/bit-soft.glb', 'models/bit-mid.glb', 'models/bit-star.glb']
 
 function randomBonusSpot() {
   // Keep clear of walls, center PLAY pad, and Skibidi toilet side
@@ -164,7 +137,7 @@ function setBonusVisible(visible: boolean) {
   }
   if (TextShape.has(bonusLabel)) {
     TextShape.getMutable(bonusLabel).text = visible ? 'BONUS\n+777' : ''
-    TextShape.getMutable(bonusLabel).textColor = Color4.fromHexString('#ffcc00')
+    TextShape.getMutable(bonusLabel).textColor = Color4.fromHexString('#5ef0ff')
   }
   if (ParticleSystem.has(bonusSparks)) {
     ParticleSystem.getMutable(bonusSparks).active = visible
@@ -724,7 +697,7 @@ function buildStartPedestal() {
   )
 }
 
-/** Floating Tron-bit / Christmas star — morphing spikes, jump to collect. */
+/** Floating Tron Bit — faceted cyan polyhedron that morphs between soft / mid / star. */
 function buildBonusPedestal() {
   const spot = randomBonusSpot()
   bonusX = spot.x
@@ -739,29 +712,20 @@ function buildBonusPedestal() {
     scale: Vector3.create(BONUS_ROOT_SCALE, BONUS_ROOT_SCALE, BONUS_ROOT_SCALE)
   })
 
-  bonusCore = engine.addEntity()
-  Transform.create(bonusCore, {
-    parent: bonusRoot,
-    position: Vector3.create(0, 0, 0),
-    scale: Vector3.create(BONUS_CORE, BONUS_CORE, BONUS_CORE)
-  })
-  MeshRenderer.setSphere(bonusCore)
-  Material.setPbrMaterial(bonusCore, glow('#ffe566', 8))
-
-  // Fewer spikes on mobile for perf
-  const spikeDirs = isMobile() ? BONUS_SPIKE_DIRS.slice(0, 6) : BONUS_SPIKE_DIRS
-  bonusSpikes = []
-  for (const dir of spikeDirs) {
-    const spike = engine.addEntity()
-    Transform.create(spike, {
+  bonusBits = []
+  for (const src of BIT_MODELS) {
+    const bit = engine.addEntity()
+    Transform.create(bit, {
       parent: bonusRoot,
-      position: Vector3.create(dir.x * 0.9, dir.y * 0.9, dir.z * 0.9),
-      scale: Vector3.create(0.28, 0.28, 1.8),
-      rotation: orientSpike(dir)
+      position: Vector3.create(0, 0, 0),
+      scale: Vector3.create(0, 0, 0)
     })
-    MeshRenderer.setBox(spike)
-    Material.setPbrMaterial(spike, glow('#ffcc00', 7))
-    bonusSpikes.push(spike)
+    GltfContainer.create(bit, { src })
+    bonusBits.push(bit)
+  }
+  // Start on mid form
+  if (Transform.has(bonusBits[1])) {
+    Transform.getMutable(bonusBits[1]).scale = Vector3.create(1, 1, 1)
   }
 
   bonusSparks = engine.addEntity()
@@ -772,23 +736,23 @@ function buildBonusPedestal() {
     ParticleSystem.create(bonusSparks, {
       active: false,
       loop: true,
-      rate: 28,
-      maxParticles: 70,
-      lifetime: 0.45,
-      gravity: 0.1,
+      rate: 22,
+      maxParticles: 50,
+      lifetime: 0.4,
+      gravity: 0.05,
       billboard: true,
       blendMode: 1,
-      shape: ParticleSystem.Shape.Sphere({ radius: 0.9 }),
-      initialSize: { start: 0.06, end: 0.14 },
-      sizeOverTime: { start: 1, end: 0.15 },
-      initialVelocitySpeed: { start: 1.2, end: 3.6 },
+      shape: ParticleSystem.Shape.Sphere({ radius: 0.7 }),
+      initialSize: { start: 0.05, end: 0.12 },
+      sizeOverTime: { start: 1, end: 0.1 },
+      initialVelocitySpeed: { start: 0.8, end: 2.4 },
       initialColor: {
-        start: Color4.create(1, 0.95, 0.4, 1),
-        end: Color4.create(1, 0.7, 0.05, 0.9)
+        start: Color4.create(0.4, 1, 1, 1),
+        end: Color4.create(0.1, 0.7, 0.9, 0.85)
       },
       colorOverTime: {
-        start: Color4.create(1, 0.85, 0.1, 0.9),
-        end: Color4.create(1, 0.4, 0.0, 0)
+        start: Color4.create(0.3, 0.95, 1, 0.85),
+        end: Color4.create(0.05, 0.4, 0.7, 0)
       }
     })
   }
@@ -800,7 +764,7 @@ function buildBonusPedestal() {
   TextShape.create(bonusLabel, {
     text: '',
     fontSize: 2.8,
-    textColor: Color4.fromHexString('#ffcc00'),
+    textColor: Color4.fromHexString('#5ef0ff'),
     outlineWidth: 0.22,
     outlineColor: Color4.Black()
   })
@@ -815,13 +779,11 @@ export function tickBonusPad(dt: number, cooldown: number, playing: boolean) {
 
   const ready = playing && cooldown <= 0
 
-  // Left play → hide completely until next run
   if (bonusWasPlaying && !playing) {
     bonusReady = false
     setBonusVisible(false)
     bonusInsideLatch = false
   }
-  // Entered play → spawn at a random spot
   if (!bonusWasPlaying && playing && ready) {
     bonusReady = true
     const spot = randomBonusSpot()
@@ -832,14 +794,12 @@ export function tickBonusPad(dt: number, cooldown: number, playing: boolean) {
   }
   bonusWasPlaying = playing
 
-  // Transition: just went on cooldown → vanish
   if (bonusReady && !ready && playing) {
     bonusReady = false
     setBonusVisible(false)
     bonusInsideLatch = true
   }
 
-  // Transition: cooldown done while playing → new random spot + show
   if (!bonusReady && ready) {
     bonusReady = true
     const spot = randomBonusSpot()
@@ -853,7 +813,6 @@ export function tickBonusPad(dt: number, cooldown: number, playing: boolean) {
     return
   }
 
-  // Occasional random hop while it's live
   bonusHopTimer -= dt
   if (bonusHopTimer <= 0) {
     bonusHopTimer = 8 + Math.random() * 6
@@ -865,58 +824,37 @@ export function tickBonusPad(dt: number, cooldown: number, playing: boolean) {
   bonusBobPhase += dt
   const bob = Math.sin(bonusBobPhase * 1.7) * BONUS_FLOAT_AMP
   const y = BONUS_BASE_Y + bob
-  const spinY = bonusBobPhase * 55
-  const spinX = Math.sin(bonusBobPhase * 0.7) * 18
-  const spinZ = Math.cos(bonusBobPhase * 0.55) * 14
-
-  // Morph cycles: octa spikes / corner star / all burst
-  const morphT = (bonusBobPhase * 0.35) % 3
-  const shape = Math.floor(morphT)
-  const blend = morphT - shape
+  const pulse = 1 + 0.08 * Math.sin(bonusBobPhase * 4.2)
+  const spinY = bonusBobPhase * 48
+  const spinX = Math.sin(bonusBobPhase * 0.65) * 22
+  const spinZ = Math.cos(bonusBobPhase * 0.5) * 16
 
   const root = Transform.getMutable(bonusRoot)
   root.position.x = bonusX
   root.position.y = y
   root.position.z = bonusZ
   root.rotation = Quaternion.fromEulerDegrees(spinX, spinY, spinZ)
-  root.scale = Vector3.create(BONUS_ROOT_SCALE, BONUS_ROOT_SCALE, BONUS_ROOT_SCALE)
+  root.scale = Vector3.create(
+    BONUS_ROOT_SCALE * pulse,
+    BONUS_ROOT_SCALE * pulse,
+    BONUS_ROOT_SCALE * pulse
+  )
 
-  const beat = 0.5 + 0.5 * Math.sin(bonusBobPhase * 5.2)
-  if (Transform.has(bonusCore)) {
-    const c = 0.75 + 0.35 * beat
-    Transform.getMutable(bonusCore).scale = Vector3.create(
-      BONUS_CORE * c,
-      BONUS_CORE * c,
-      BONUS_CORE * c
-    )
-    Material.setPbrMaterial(bonusCore, glow('#ffe566', 6 + 5 * beat))
-  }
-
-  const spikeDirs = isMobile() ? BONUS_SPIKE_DIRS.slice(0, 6) : BONUS_SPIKE_DIRS
-  for (let i = 0; i < bonusSpikes.length; i++) {
-    const spike = bonusSpikes[i]
-    if (!Transform.has(spike)) continue
-    const dir = spikeDirs[i]
-    const isAxis = i < 6
-    // Shape weights: 0 = axes out, 1 = corners out, 2 = everything jabbing
-    let w0 = isAxis ? 1 : 0.25
-    let w1 = isAxis ? 0.2 : 1
-    let w2 = 0.75 + 0.25 * Math.sin(bonusBobPhase * 6 + i * 0.9)
-    const w =
-      shape === 0
-        ? w0 * (1 - blend) + w1 * blend
-        : shape === 1
-          ? w1 * (1 - blend) + w2 * blend
-          : w2 * (1 - blend) + w0 * blend
-    const tipJab = 0.55 + 0.9 * w + 0.2 * Math.sin(bonusBobPhase * 8 + i)
-    const len = 1.1 + tipJab * 2.1
-    const thick = 0.18 + 0.12 * (1 - w)
-    const mid = len * 0.48
-    const t = Transform.getMutable(spike)
-    t.position = Vector3.create(dir.x * mid, dir.y * mid, dir.z * mid)
-    t.scale = Vector3.create(thick, thick, len)
-    t.rotation = orientSpike(dir)
-    Material.setPbrMaterial(spike, glow(w > 0.6 ? '#ffffff' : '#ffcc00', 5 + 6 * w))
+  // Morph across soft → mid → star → soft (Bit-style shape shifts)
+  const cycle = (bonusBobPhase * 0.28) % 3
+  const i0 = Math.floor(cycle) % 3
+  const i1 = (i0 + 1) % 3
+  const t = cycle - Math.floor(cycle)
+  // Smoothstep blend
+  const u = t * t * (3 - 2 * t)
+  for (let i = 0; i < bonusBits.length; i++) {
+    if (!Transform.has(bonusBits[i])) continue
+    let s = 0
+    if (i === i0) s = 1 - u
+    else if (i === i1) s = u
+    // Keep a tiny residual so GLTF stays loaded
+    const show = s > 0.02 ? s : 0.001
+    Transform.getMutable(bonusBits[i]).scale = Vector3.create(show, show, show)
   }
 
   if (Transform.has(bonusSparks)) {
