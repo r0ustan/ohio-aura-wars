@@ -51,7 +51,6 @@ let startLabel: Entity
 let startBaseLower: Entity
 let startBaseUpper: Entity
 let howHitbox: Entity
-let howLabel: Entity
 let scoreboard: Entity
 let bossRoot: Entity
 let bossHead: Entity
@@ -640,19 +639,6 @@ function buildStartPedestal() {
     scale: Vector3.create(HOW_HIT_R, HOW_HIT_H, HOW_HIT_R)
   })
   MeshCollider.setCylinder(howHitbox, ColliderLayer.CL_POINTER)
-
-  howLabel = engine.addEntity()
-  Transform.create(howLabel, {
-    position: Vector3.create(24, 0.55, 26.15)
-  })
-  TextShape.create(howLabel, {
-    text: 'HOW?',
-    fontSize: 1.4,
-    textColor: Color4.fromHexString('#c8b8e8'),
-    outlineWidth: 0.14,
-    outlineColor: Color4.Black()
-  })
-  Billboard.create(howLabel, { billboardMode: BillboardMode.BM_Y })
 
   pointerEventsSystem.onPointerDown(
     {
