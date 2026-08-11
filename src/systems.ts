@@ -141,6 +141,11 @@ export function fireGyattButton() {
   gameState.announcementFlash = 0.4
   playBonusSfx()
 
+  if (Transform.has(engine.PlayerEntity)) {
+    const p = Transform.get(engine.PlayerEntity).position
+    spawnScorePopup(Vector3.create(p.x, p.y, p.z), gained, true)
+  }
+
   // Spawn a few freebies after the scream
   spawnBrainrot('gyatt')
   spawnBrainrot('rizz')
