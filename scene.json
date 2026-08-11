@@ -1,0 +1,76 @@
+{
+  "ecs7": true,
+  "runtimeVersion": "7",
+  "display": {
+    "title": "brainrot",
+    "description": "the best place to rot yer brain.",
+    "favicon": "favicon_asset",
+    "navmapThumbnail": "assets/images/brainrot-ohio-aura-wars-logo-800x500.png"
+  },
+  "owner": "",
+  "contact": {
+    "name": "Sumdum Goy",
+    "email": ""
+  },
+  "main": "bin/index.js",
+  "tags": [],
+  "scene": {
+    "base": "0,0",
+    "parcels": [
+      "0,2",
+      "1,2",
+      "2,2",
+      "0,1",
+      "1,1",
+      "2,1",
+      "0,0",
+      "1,0",
+      "2,0"
+    ]
+  },
+  "spawnPoints": [
+    {
+      "name": "SpawnArea1",
+      "default": true,
+      "position": {
+        "x": [
+          3,
+          6
+        ],
+        "y": [
+          0,
+          0
+        ],
+        "z": [
+          3.25,
+          6.25
+        ]
+      },
+      "cameraTarget": {
+        "x": 8,
+        "y": 1,
+        "z": 8
+      }
+    }
+  ],
+  "requiredPermissions": [
+    "ALLOW_TO_TRIGGER_AVATAR_EMOTE",
+    "ALLOW_TO_MOVE_PLAYER_INSIDE_SCENE"
+  ],
+  "featureToggles": {
+    "voiceChat": "enabled",
+    "portableExperiences": "enabled",
+    "nearbyVoiceChat": "enabled"
+  },
+  "creator": "",
+  "rating": "A",
+  "skyboxConfig": {},
+  "landscapeTerrain": true,
+  "source": {
+    "origin": "creator-hub",
+    "projectId": "0cd4c0fc-5925-466c-b44a-329f99768d20"
+  },
+  "worldConfiguration": {
+    "name": "brainrot.dcl.eth"
+  }
+}
