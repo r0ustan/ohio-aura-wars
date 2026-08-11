@@ -586,9 +586,9 @@ function buildOhioZone() {
   })
   TextShape.create(ohioLabel, {
     text: '2X POINTS',
-    fontSize: 2.4,
+    fontSize: 4.8,
     textColor: Color4.fromHexString('#ff7ac8'),
-    outlineWidth: 0.18,
+    outlineWidth: 0.22,
     outlineColor: Color4.Black()
   })
   Billboard.create(ohioLabel, { billboardMode: BillboardMode.BM_Y })

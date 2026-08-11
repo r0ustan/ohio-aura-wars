@@ -14,6 +14,8 @@ import { lightningSystem, spawnLightningWarning } from './lightningStrike'
 import { mistBurstSystem, spawnMistBurst } from './mistBurst'
 import { scorePopupSystem, spawnScorePopup } from './scorePopup'
 import { playScoreSfx, sfxSystem } from './sfxPlayer'
+import { flingFanumBodyParts, sigmaBlastSystem, spawnSigmaEnemyBlast } from './sigmaBlast'
+import { isSigmaInvincible, startSigmaTrail } from './sigmaTrail'
 
 export type { BrainrotKind }
 
@@ -364,6 +366,7 @@ function collectGoodBrainrot(entity: Entity) {
     gameState.multiplierTimer = 5
     gameState.chaos = { text: 'SIGMA BOOST', ttl: 1.6 }
     gameState.announcementFlash = 0.25
+    startSigmaTrail(5)
   }
 
   const pos = Transform.get(entity).position
@@ -373,7 +376,39 @@ function collectGoodBrainrot(entity: Entity) {
   destroyBrainrotTree(entity)
 }
 
+function explodeBadWithSigma(entity: Entity) {
+  if (!Brainrot.has(entity) || !active.has(entity)) return
+
+  const rootT = Transform.get(entity)
+  const blastAt = Vector3.create(rootT.position.x, rootT.position.y, rootT.position.z)
+  const player = localPlayerPos()
+  const toward = player
+    ? Vector3.create(player.x, player.y + 1.35, player.z)
+    : Vector3.create(blastAt.x, blastAt.y + 1.5, blastAt.z)
+
+  const parts = treeParts.get(entity) ?? []
+  treeParts.delete(entity)
+  active.delete(entity)
+
+  // Detach meshes first so removing the root doesn't wipe them
+  flingFanumBodyParts(parts, rootT.position, rootT.rotation, toward)
+  engine.removeEntity(entity)
+
+  spawnSigmaEnemyBlast(blastAt)
+  gameState.hits += 1
+  gameState.combo += 1
+  gameState.comboTimer = 1.6
+  gameState.chaos = { text: 'VAPORIZED!', ttl: 1.1 }
+  gameState.announcementFlash = 0.2
+}
+
 function taxAndPushBad(entity: Entity, playerPos: Vector3, playerVx: number, playerVz: number) {
+  // Sigma boost: Fanums explode on contact (boss Skibidi still taxes separately)
+  if (isSigmaInvincible()) {
+    explodeBadWithSigma(entity)
+    return
+  }
+
   const data = Brainrot.get(entity)
   const motion = BrainrotMotion.getMutable(entity)
   const t = Transform.getMutable(entity)
@@ -471,6 +506,7 @@ function clampArena(t: { position: { x: number; z: number } }, motion: { vx: num
 
 export function brainrotSystem(dt: number) {
   mistBurstSystem(dt)
+  sigmaBlastSystem(dt)
   lightningSystem(dt)
   scorePopupSystem(dt)
   sfxSystem(dt)

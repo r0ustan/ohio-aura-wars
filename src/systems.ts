@@ -39,6 +39,7 @@ import { submitRunScore, tickLeaderboard } from './leaderboard'
 import { startGameMusic, stopGameMusic, tickGameMusic } from './musicPlayer'
 import { spawnScorePopup } from './scorePopup'
 import { playAmogusSfx, playBonusSfx, playPriceIsWrongSfx, playScoreSfx } from './sfxPlayer'
+import { startSigmaTrail, stopSigmaTrail, tickSigmaTrail, isSigmaInvincible } from './sigmaTrail'
 
 let chaosTimer = 0
 let bossAngle = 0
@@ -57,6 +58,7 @@ const SCORE_POP_DUR = 0.14
 function finishRun() {
   const peak = gameState.peakAura
   endRound()
+  stopSigmaTrail()
   clearBrainrots()
   stopGameMusic()
   playPriceIsWrongSfx()
@@ -71,6 +73,7 @@ function finishRun() {
 export function startGame() {
   if (gameState.phase === 'playing') return
   clearBrainrots()
+  stopSigmaTrail()
   resetRound()
   resetMultiplyRamp()
   chaosTimer = 4
@@ -210,6 +213,9 @@ function updateBoss(dt: number) {
   bossTaxCooldown -= dt
   if (bossTaxCooldown <= 0 && distanceToBoss() < 7.2) {
     bossTaxCooldown = 2.8
+    // Sigma boost: Skibidi drain does nothing while invincible
+    if (isSigmaInvincible()) return
+
     // Flat 50% of current aura — ignore multipliers so the hit is exact
     const lost = Math.floor(gameState.aura * 0.5)
     gameState.aura = Math.max(0, gameState.aura - lost)
@@ -237,6 +243,7 @@ function maybeChaosEvent() {
     gameState.multiplier = Math.max(gameState.multiplier, 2)
     gameState.multiplierTimer = Math.max(gameState.multiplierTimer, 6)
     spawnBrainrot('sigma')
+    startSigmaTrail(6)
   } else if (line.includes('Tax')) {
     spawnBrainrot('fanum')
     if (!isMobile()) spawnBrainrot('fanum')
@@ -261,6 +268,7 @@ export function gameSystem(dt: number) {
   tickLeaderboard(dt)
   tickGameMusic(dt)
   tickBonusPad(dt, gameState.gyattCooldown, gameState.phase === 'playing')
+  tickSigmaTrail(dt)
 
   // Timers shared across phases for UI fade
   if (gameState.chaos) {
