@@ -38,7 +38,7 @@ export const gameState = {
   showHowTo: false
 }
 
-export const GYATT_COOLDOWN = 8
+export const GYATT_COOLDOWN = 16
 export const GYATT_POWER = 777
 export const COMBO_WINDOW = 1.6
 

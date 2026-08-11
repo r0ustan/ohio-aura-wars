@@ -195,6 +195,16 @@ function randomArenaPos() {
   return Vector3.create(x, 0, z)
 }
 
+/** Fanums can appear near the walls (playable clamp is ~3–45). */
+function randomFanumPos() {
+  const x = 2.8 + Math.random() * 42.4
+  const z = 2.8 + Math.random() * 42.4
+  if (Math.abs(x - 24) < 4 && Math.abs(z - 24) < 4) {
+    return Vector3.create(x < 24 ? x - 7 : x + 7, 0, z < 24 ? z - 5 : z + 5)
+  }
+  return Vector3.create(x, 0, z)
+}
+
 /** Remove root and every recorded child (fallback: scene scan). */
 function destroyBrainrotTree(root: Entity) {
   const parts = treeParts.get(root)
@@ -279,7 +289,7 @@ function tickPendingFanums(dt: number) {
 function scheduleFanumSpawn(at?: Vector3) {
   if (gameState.phase !== 'playing') return
 
-  const pos = at ?? randomArenaPos()
+  const pos = at ?? randomFanumPos()
   spawnLightningWarning(pos)
   pendingFanums.push({ x: pos.x, z: pos.z, ttl: FANUM_WARN_DELAY })
 }
@@ -328,14 +338,17 @@ export function spawnBrainrot(
     bobPhase: Math.random() * Math.PI * 2,
     bobSpeed: meta.good ? 2.2 + Math.random() : 4 + Math.random() * 2,
     wobble: meta.good ? 8 : 35,
-    // Bad linger forever; goods stay long enough to multiply once or twice
-    lifetime: meta.good ? 14 + Math.random() * 5 : 99999,
+    // Bad linger forever; goods stay long enough to multiply once or twice.
+    // Sigmas are rare — despawn quickly so they don't camp one spot.
+    lifetime:
+      kind === 'sigma' ? 4.5 + Math.random() * 1.5 : meta.good ? 14 + Math.random() * 5 : 99999,
     value: meta.value,
     good: meta.good,
     replicateIn: meta.good ? nextGoodReplicateDelay() : 0
   })
 
   if (!meta.good) {
+    addBadCollider(root, parts)
     BrainrotMotion.create(root, {
       vx: 0,
       vz: 0,
@@ -401,9 +414,6 @@ function explodeBadWithSigma(entity: Entity) {
   engine.removeEntity(entity)
 
   spawnSigmaEnemyBlast(blastAt)
-  gameState.hits += 1
-  gameState.combo += 1
-  gameState.comboTimer = 1.6
   gameState.chaos = { text: 'VAPORIZED!', ttl: 1.1 }
   gameState.announcementFlash = 0.2
 }
