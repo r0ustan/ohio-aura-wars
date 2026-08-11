@@ -33,6 +33,63 @@ const AMOGUS = 'sounds/amogus.mp3'
 const PRICE_IS_WRONG = 'sounds/priceiswrong.mp3'
 const THUD = 'sounds/thud.mp3'
 const TACO_BELL_BONG = 'sounds/taco-bell-bong.mp3'
+const HEARTBEAT = 'sounds/heartbeat.mp3'
+
+let heartbeatEntity: Entity | null = null
+let heartbeatActive = false
+
+function ensureHeartbeatEntity() {
+  if (heartbeatEntity && Transform.has(heartbeatEntity)) {
+    const t = Transform.getMutable(heartbeatEntity)
+    if (Transform.has(engine.PlayerEntity) && t.parent !== engine.PlayerEntity) {
+      t.parent = engine.PlayerEntity
+      t.position = Vector3.create(0, 1.55, 0)
+    }
+    return heartbeatEntity
+  }
+
+  heartbeatEntity = engine.addEntity()
+  if (Transform.has(engine.PlayerEntity)) {
+    Transform.create(heartbeatEntity, {
+      parent: engine.PlayerEntity,
+      position: Vector3.create(0, 1.55, 0)
+    })
+  } else {
+    Transform.create(heartbeatEntity, { position: Vector3.create(24, 1.55, 24) })
+  }
+  return heartbeatEntity
+}
+
+function startHeartbeat() {
+  if (heartbeatActive) return
+  heartbeatActive = true
+  const entity = ensureHeartbeatEntity()
+  AudioSource.createOrReplace(entity, {
+    audioClipUrl: HEARTBEAT,
+    playing: true,
+    loop: true,
+    volume: 0.85,
+    global: false,
+    currentTime: 0
+  })
+}
+
+function stopHeartbeat() {
+  if (!heartbeatActive && !(heartbeatEntity && AudioSource.has(heartbeatEntity))) {
+    heartbeatActive = false
+    return
+  }
+  heartbeatActive = false
+  if (heartbeatEntity && AudioSource.has(heartbeatEntity)) {
+    AudioSource.getMutable(heartbeatEntity).playing = false
+  }
+}
+
+/** Loop heartbeat.mp3 only while the low-aura red screen is showing. */
+export function tickLowAuraHeartbeat(danger: boolean) {
+  if (danger) startHeartbeat()
+  else stopHeartbeat()
+}
 
 function playLocalClip(url: string, volume = 0.9, ttl = 4) {
   const entity = engine.addEntity()

@@ -1,7 +1,7 @@
 import ReactEcs, { Label, ReactEcsRenderer, ScreenInsetArea, UiEntity } from '@dcl/sdk/react-ecs'
 import { isMobile } from '@dcl/sdk/platform'
 import { Color4 } from '@dcl/sdk/math'
-import { gameState } from './gameState'
+import { gameState, STARTING_AURA } from './gameState'
 import { returnToMenu } from './systems'
 
 export function setupUi() {
@@ -238,6 +238,7 @@ function Hud() {
         pointerFilter: 'none'
       }}
     >
+      {gameState.aura < STARTING_AURA ? LowAuraPulse() : null}
       <UiEntity
         uiTransform={{
           width: '100%',
@@ -257,6 +258,25 @@ function Hud() {
         />
       </UiEntity>
     </UiEntity>
+  )
+}
+
+/** Full-screen red wash with a transparent heartbeat when aura drops under 1000. */
+function LowAuraPulse() {
+  const beat = heartbeatScale(gameState.hudBeat * 1.15)
+  // Rest ~0.14 alpha, peaks ~0.34 on each lub-dub
+  const alpha = 0.14 + (beat - 1) * 1.25
+  return (
+    <UiEntity
+      uiTransform={{
+        width: '100%',
+        height: '100%',
+        positionType: 'absolute',
+        position: { top: 0, left: 0 },
+        pointerFilter: 'none'
+      }}
+      uiBackground={{ color: Color4.create(0.9, 0.02, 0.08, alpha) }}
+    />
   )
 }
 

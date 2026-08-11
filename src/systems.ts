@@ -38,7 +38,7 @@ import {
 import { submitRunScore, tickLeaderboard } from './leaderboard'
 import { startGameMusic, stopGameMusic, tickGameMusic } from './musicPlayer'
 import { spawnScorePopup } from './scorePopup'
-import { playAmogusSfx, playBonusSfx, playPriceIsWrongSfx, playScoreSfx } from './sfxPlayer'
+import { playAmogusSfx, playBonusSfx, playPriceIsWrongSfx, playScoreSfx, tickLowAuraHeartbeat } from './sfxPlayer'
 import { startSigmaTrail, stopSigmaTrail, tickSigmaTrail, isSigmaInvincible } from './sigmaTrail'
 
 let chaosTimer = 0
@@ -313,6 +313,9 @@ export function gameSystem(dt: number) {
   tickBonusPad(dt, gameState.gyattCooldown, gameState.phase === 'playing')
   tickSigmaTrail(dt)
   containPlayerInArena(dt)
+  tickLowAuraHeartbeat(
+    gameState.phase === 'playing' && gameState.aura < STARTING_AURA
+  )
 
   // Timers shared across phases for UI fade
   if (gameState.chaos) {
