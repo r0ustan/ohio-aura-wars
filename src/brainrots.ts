@@ -55,9 +55,11 @@ const ARENA_MIN = 3
 const ARENA_MAX = 45
 /** Goods still capped; Fanums never stop spawning (oldest recycled past soft cap). */
 const MAX_GOOD_DESKTOP = 16
-const MAX_GOOD_MOBILE = 8
+const MAX_GOOD_MOBILE = 16
 const FANUM_SOFT_CAP_DESKTOP = 40
-const FANUM_SOFT_CAP_MOBILE = 12
+const FANUM_SOFT_CAP_MOBILE = 40
+/** Only one Sigma on the field at a time (desktop + mobile). */
+const MAX_SIGMA = 1
 /** Start creeping toward a player inside this range */
 const CHASE_RADIUS = 15
 /** Soft accel toward nearest player (balances FRICTION → ~1.2 u/s crawl) */
@@ -86,15 +88,39 @@ const MAX_MULTIPLY_SPEED_MOBILE = 8
 let multiplySpeed = 1
 let multiplyRampTimer = MULTIPLY_RAMP_INTERVAL
 
-/** Steady Fanum cadence: one every ~1s (±1s); mobile ~2.2s (±1.2s) */
+/** Steady Fanum + chibi cadence: same interval on both (caps differ: 16 goods / 40 Fanums) */
 let fanumSpawnTimer = 1
 const FANUM_SPAWN_BASE = 1
 const FANUM_SPAWN_JITTER = 1
-const FANUM_SPAWN_BASE_MOBILE = 2.2
-const FANUM_SPAWN_JITTER_MOBILE = 1.2
 
-/** Goods spawn at half Fanum frequency: every ~2s (±2s) */
-let goodSpawnTimer = 2
+/** Goods use the same cadence as Fanums — no faster half-rate */
+let goodSpawnTimer = 1
+
+/**
+ * Dedicated Sigma cadence. Same on mobile and desktop.
+ * Intentionally slow — rare pickup.
+ */
+let sigmaSpawnTimer = 16
+const SIGMA_SPAWN_BASE = 28
+const SIGMA_SPAWN_JITTER = 10
+
+function nextSigmaInterval() {
+  return Math.max(18, SIGMA_SPAWN_BASE + (Math.random() * 2 - 1) * SIGMA_SPAWN_JITTER)
+}
+
+/** Spawn Sigma near the player so black shades aren't lost across the arena. */
+function randomSigmaPos() {
+  const player = localPlayerPos()
+  const cx = player ? player.x : 24
+  const cz = player ? player.z : 24
+  const radius = 8 + Math.random() * 8
+  const angle = Math.random() * Math.PI * 2
+  let x = cx + Math.cos(angle) * radius
+  let z = cz + Math.sin(angle) * radius
+  x = Math.min(ARENA_MAX - 1, Math.max(ARENA_MIN + 1, x))
+  z = Math.min(ARENA_MAX - 1, Math.max(ARENA_MIN + 1, z))
+  return Vector3.create(x, 0, z)
+}
 
 let lastPlayerX = 24
 let lastPlayerZ = 24
@@ -104,19 +130,12 @@ const pendingFanums: PendingFanum[] = []
 const FANUM_WARN_DELAY = 0.42
 
 function nextFanumInterval() {
-  if (isMobile()) {
-    return Math.max(
-      0.8,
-      FANUM_SPAWN_BASE_MOBILE + (Math.random() * 2 - 1) * FANUM_SPAWN_JITTER_MOBILE
-    )
-  }
   return Math.max(0.25, FANUM_SPAWN_BASE + (Math.random() * 2 - 1) * FANUM_SPAWN_JITTER)
 }
 
+/** Identical cadence to Fanums so both fill their caps at the same spawn rate. */
 function nextGoodInterval() {
-  const base = isMobile() ? FANUM_SPAWN_BASE_MOBILE * 2 : FANUM_SPAWN_BASE * 2
-  const jitter = isMobile() ? FANUM_SPAWN_JITTER_MOBILE * 2 : FANUM_SPAWN_JITTER * 2
-  return Math.max(isMobile() ? 1.2 : 0.5, base + (Math.random() * 2 - 1) * jitter)
+  return nextFanumInterval()
 }
 
 export function resetFanumSpawner() {
@@ -159,9 +178,22 @@ function tickGoodSpawner(dt: number) {
   goodSpawnTimer -= dt
   if (goodSpawnTimer > 0) return
   goodSpawnTimer = nextGoodInterval()
-  if (getGoodCount() < maxGood()) {
+  if (getChibiCount() < maxGood()) {
     spawnBrainrot(pickGoodKind())
   }
+}
+
+function tickSigmaSpawner(dt: number) {
+  if (gameState.phase !== 'playing') return
+  sigmaSpawnTimer -= dt
+  if (sigmaSpawnTimer > 0) return
+  // One at a time — retry soon instead of waiting a full cycle
+  if (hasActiveSigma()) {
+    sigmaSpawnTimer = 2.5
+    return
+  }
+  sigmaSpawnTimer = nextSigmaInterval()
+  spawnBrainrot('sigma', randomSigmaPos())
 }
 
 function pickKind(): BrainrotKind {
@@ -176,8 +208,9 @@ function pickKind(): BrainrotKind {
 }
 
 function pickGoodKind(): BrainrotKind {
+  // Regular good spawner = chibis only. Sigma has its own timer + cap of 1.
   const entries = (Object.entries(KIND_META) as [BrainrotKind, (typeof KIND_META)[BrainrotKind]][]).filter(
-    ([, k]) => k.good
+    ([kind, k]) => k.good && kind !== 'sigma'
   )
   const total = entries.reduce((s, [, k]) => s + k.weight, 0)
   let roll = Math.random() * total
@@ -240,6 +273,7 @@ export function clearBrainrots() {
   active.clear()
   treeParts.clear()
   pendingFanums.length = 0
+  sigmaSpawnTimer = 12 + Math.random() * 10
 }
 
 function addBadCollider(root: Entity, parts: Entity[]) {
@@ -252,12 +286,6 @@ function addBadCollider(root: Entity, parts: Entity[]) {
   })
   MeshCollider.setBox(collider, ColliderLayer.CL_PHYSICS)
   parts.push(collider)
-}
-
-/** Positive multiply cadence (secondary to global good spawner) */
-function nextGoodReplicateDelay() {
-  const good = getGoodCount()
-  return Math.max(2.5, 5 - good * 0.15) + Math.random() * 1.5
 }
 
 function destroyOldestFanum() {
@@ -275,6 +303,29 @@ function makeRoomForFanum() {
   while (getBadCount() >= fanumSoftCap()) {
     destroyOldestFanum()
   }
+}
+
+function hasActiveSigma() {
+  return getSigmaCount() >= MAX_SIGMA
+}
+
+function getSigmaCount() {
+  let n = 0
+  for (const e of active) {
+    if (Brainrot.has(e) && Brainrot.get(e).kind === 'sigma') n++
+  }
+  return n
+}
+
+/** Non-Sigma goods only — chibi soft cap is separate from the 1 Sigma slot. */
+function getChibiCount() {
+  let n = 0
+  for (const e of active) {
+    if (!Brainrot.has(e)) continue
+    const b = Brainrot.get(e)
+    if (b.good && b.kind !== 'sigma') n++
+  }
+  return n
 }
 
 function tickPendingFanums(dt: number) {
@@ -306,9 +357,11 @@ export function spawnBrainrot(
   const kind = forced ?? pickKind()
   const meta = KIND_META[kind]
 
-  // Goods capped by good count only — Fanums must not block positive spawns
-  if (meta.good) {
-    if (getGoodCount() >= maxGood()) return
+  // Goods capped by chibi count (16); Sigma capped separately (1); Fanums soft-capped (40).
+  if (kind === 'sigma') {
+    if (getSigmaCount() >= MAX_SIGMA) return
+  } else if (meta.good) {
+    if (getChibiCount() >= maxGood()) return
   } else {
     makeRoomForFanum()
   }
@@ -319,7 +372,7 @@ export function spawnBrainrot(
     return
   }
 
-  const pos = at ?? randomArenaPos()
+  const pos = at ?? (kind === 'sigma' ? randomSigmaPos() : randomArenaPos())
 
   const root = engine.addEntity()
   Transform.create(root, {
@@ -338,15 +391,15 @@ export function spawnBrainrot(
   Brainrot.create(root, {
     kind,
     bobPhase: Math.random() * Math.PI * 2,
-    bobSpeed: meta.good ? 2.2 + Math.random() : 4 + Math.random() * 2,
+    bobSpeed: kind === 'sigma' ? 3.4 + Math.random() : meta.good ? 2.2 + Math.random() : 4 + Math.random() * 2,
     wobble: meta.good ? 8 : 35,
-    // Bad linger forever; goods stay long enough to multiply once or twice.
-    // Sigmas are rare — despawn quickly so they don't camp one spot.
+    // Bad linger forever; goods despawn if ignored.
+    // Sigmas despawn if ignored, but hang long enough to spot.
     lifetime:
-      kind === 'sigma' ? 4.5 + Math.random() * 1.5 : meta.good ? 14 + Math.random() * 5 : 99999,
+      kind === 'sigma' ? 12 + Math.random() * 4 : meta.good ? 14 + Math.random() * 5 : 99999,
     value: meta.value,
     good: meta.good,
-    replicateIn: meta.good ? nextGoodReplicateDelay() : 0
+    replicateIn: 0
   })
 
   if (!meta.good) {
@@ -538,7 +591,7 @@ export function brainrotSystem(dt: number) {
   tickPendingFanums(dt)
   tickFanumSpawner(dt)
   tickGoodSpawner(dt)
-  tickMultiplyRamp(dt)
+  tickSigmaSpawner(dt)
 
   let playerVx = 0
   let playerVz = 0
@@ -555,7 +608,6 @@ export function brainrotSystem(dt: number) {
 
   const toCollect: Entity[] = []
   const damp = Math.exp(-FRICTION * dt)
-  const goodReplicateDt = dt * multiplySpeed
   const playerMoveSpeed = Math.sqrt(playerVx * playerVx + playerVz * playerVz)
   const stillFactor = Math.max(0, 1 - playerMoveSpeed / PLAYER_STILL_REF)
   const chaseAccel = CHASE_ACCEL * (1 + stillFactor * STILL_SWARM_ACCEL)
@@ -571,7 +623,9 @@ export function brainrotSystem(dt: number) {
     const t = Transform.getMutable(entity)
 
     if (mutable.good) {
-      t.position.y = 0.08 + Math.abs(Math.sin(mutable.bobPhase)) * 0.25
+      const floatAmp = 0.25
+      const floatBase = 0.08
+      t.position.y = floatBase + Math.abs(Math.sin(mutable.bobPhase)) * floatAmp
       // Faces are built on +Z — yaw root toward the player so eyes stay visible
       const player = localPlayerPos()
       if (player) {
@@ -580,16 +634,8 @@ export function brainrotSystem(dt: number) {
         t.rotation = Quaternion.fromEulerDegrees(0, (Math.atan2(dx, dz) * 180) / Math.PI, 0)
       }
 
-      // Positive characters multiply on their own cadence
-      if (gameState.phase === 'playing') {
-        mutable.replicateIn -= goodReplicateDt
-        if (mutable.replicateIn <= 0) {
-          mutable.replicateIn = nextGoodReplicateDelay()
-          if (getGoodCount() < maxGood() && Math.random() < 0.8) {
-            spawnBrainrot(pickGoodKind())
-          }
-        }
-      }
+      // Goods only come from the global spawner (same cadence as Fanums).
+      // Per-chibi replication was flooding the field past the intended 16.
 
       if (gameState.phase === 'playing' && playerNear(t.position, PICKUP_RADIUS)) {
         toCollect.push(entity)

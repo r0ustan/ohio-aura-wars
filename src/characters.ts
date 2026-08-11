@@ -9,7 +9,7 @@ import {
   Transform
 } from '@dcl/sdk/ecs'
 import { isMobile } from '@dcl/sdk/platform'
-import { Color4, Quaternion, Vector3 } from '@dcl/sdk/math'
+import { Color3, Color4, Quaternion, Vector3 } from '@dcl/sdk/math'
 import { ceramic, glow, plastic, solid } from './materials'
 
 export type BrainrotKind = 'rizz' | 'skibidi' | 'gyatt' | 'fanum' | 'sigma'
@@ -500,126 +500,115 @@ export function buildFanumCharacter(root: Entity) {
   scoreTag(root, String(KIND_META.fanum.value), '#ff2244', 2.75, true)
 }
 
-/** Soft cool chibi sigma — larger; soft body glow; rainbow vomit stripes on shirt */
+/**
+ * Soft cool chibi Sigma — 1.5× tall, black glasses + small gold accents.
+ * Always uses the mobile LOD so desktop matches phone.
+ */
 export function buildSigmaCharacter(root: Entity) {
-  const s = 1.28
-  part({
-    parent: root,
-    pos: Vector3.create(0, 0.5 * s, 0),
-    scale: Vector3.create(0.65 * s, 0.85 * s, 0.45 * s),
-    shape: 'box',
-    material: glow('#2ec4b6', 0.7, 0.35)
-  })
-  if (!simpleBuild) {
+  const prevSimple = simpleBuild
+  simpleBuild = true
+  try {
+    const s = 1.28 * 1.5
     part({
       parent: root,
-      pos: Vector3.create(0, 0.6 * s, 0.24 * s),
-      scale: Vector3.create(0.2 * s, 0.55 * s, 0.05 * s),
+      pos: Vector3.create(0, 0.5 * s, 0),
+      scale: Vector3.create(0.65 * s, 0.85 * s, 0.45 * s),
       shape: 'box',
-      material: plastic('#fff8f0', 0.35)
+      material: glow('#2ec4b6', 2.4, 0.28)
     })
+    // Head — no emission (skin stays matte)
     part({
       parent: root,
-      pos: Vector3.create(0, 0.55 * s, 0.28 * s),
-      scale: Vector3.create(0.08 * s, 0.35 * s, 0.05 * s),
-      shape: 'box',
-      material: glow('#ffd700', 1.2)
-    })
-  }
-  // Head — no emission (skin stays matte)
-  part({
-    parent: root,
-    pos: Vector3.create(0, 1.3 * s, 0),
-    scale: Vector3.create(0.9 * s, 0.9 * s, 0.9 * s),
-    shape: 'sphere',
-    material: plastic('#ffe0c8')
-  })
-  cuteFace(root, 1.3 * s)
-  // Gold frames — keep clear of Fanum black
-  part({
-    parent: root,
-    pos: Vector3.create(0, 1.38 * s, 0.42 * s),
-    scale: Vector3.create(0.7 * s, 0.2 * s, 0.14 * s),
-    shape: 'box',
-    material: glow('#e8c04a', 1.4, 0.3)
-  })
-
-  // Four wavy rainbow stripes on the shirt (mouth → chest)
-  addSigmaRainbowVomit(root, s)
-
-  if (simpleBuild) {
-    scoreTag(root, '+320', '#ffd700', 2.2 * s)
-    return
-  }
-  for (const x of [-0.22, 0.22]) {
-    part({
-      parent: root,
-      pos: Vector3.create(x * s, 1.38 * s, 0.48 * s),
-      scale: Vector3.create(0.28 * s, 0.22 * s, 0.08 * s),
-      shape: 'sphere',
-      material: glow('#4ec4ff', 1.3)
-    })
-  }
-  part({
-    parent: root,
-    pos: Vector3.create(0.1 * s, 1.75 * s, -0.05 * s),
-    scale: Vector3.create(0.75 * s, 0.35 * s, 0.65 * s),
-    shape: 'sphere',
-    material: glow('#e0b45a', 0.8, 0.45)
-  })
-  for (const x of [-0.45, 0.45]) {
-    part({
-      parent: root,
-      pos: Vector3.create(x * s, 0.55 * s, 0.1 * s),
-      scale: Vector3.create(0.18 * s, 0.35 * s, 0.18 * s),
-      rot: Vector3.create(40, 0, x < 0 ? 15 : -15),
+      pos: Vector3.create(0, 1.3 * s, 0),
+      scale: Vector3.create(0.9 * s, 0.9 * s, 0.9 * s),
       shape: 'sphere',
       material: plastic('#ffe0c8')
     })
-  }
-  for (const x of [-0.18, 0.18]) {
+    cuteFace(root, 1.3 * s)
+
+    // Modest black sunglasses + small gold accents
+    const matteBlack = {
+      albedoColor: Color4.fromHexString('#050508'),
+      emissiveColor: Color3.create(0, 0, 0),
+      emissiveIntensity: 0,
+      roughness: 0.92,
+      metallic: 0,
+      specularIntensity: 0
+    }
+    const goldAccent = solid('#d4a017', 0.45, 0.35)
     part({
       parent: root,
-      pos: Vector3.create(x * s, 0.08 * s, 0.05 * s),
-      scale: Vector3.create(0.2 * s, 0.12 * s, 0.28 * s),
+      pos: Vector3.create(0, 1.36 * s, 0.4 * s),
+      scale: Vector3.create(0.52 * s, 0.1 * s, 0.08 * s),
       shape: 'box',
-      material: solid('#f0d9a8', 0.45)
+      material: matteBlack
     })
-  }
-  scoreTag(root, '+320', '#ffd700', 2.55 * s)
-}
-
-/**
- * Four vertical wavy vomit lines on the shirt, L→R: red, yellow, light blue, green.
- * Matte — no emission.
- */
-function addSigmaRainbowVomit(parent: Entity, s: number) {
-  const stripes: Array<{ x: number; hex: string; phase: number }> = [
-    { x: -0.16, hex: '#ff2244', phase: 0 },
-    { x: -0.05, hex: '#ffe566', phase: 1.1 },
-    { x: 0.05, hex: '#7ad8ff', phase: 2.2 },
-    { x: 0.16, hex: '#3dff7a', phase: 3.3 }
-  ]
-  // From upper chest / mouth down the shirt front
-  const topY = 0.95
-  const botY = 0.22
-  const z = 0.3
-  const segments = simpleBuild ? 5 : 8
-
-  for (const stripe of stripes) {
-    for (let i = 0; i < segments; i++) {
-      const t = i / (segments - 1)
-      const y = topY - t * (topY - botY)
-      const wave = Math.sin(t * Math.PI * 2.4 + stripe.phase) * 0.035
+    part({
+      parent: root,
+      pos: Vector3.create(0, 1.36 * s, 0.45 * s),
+      scale: Vector3.create(0.08 * s, 0.05 * s, 0.05 * s),
+      shape: 'box',
+      material: goldAccent
+    })
+    for (const x of [-0.16, 0.16]) {
       part({
-        parent,
-        pos: Vector3.create((stripe.x + wave) * s, y * s, z * s),
-        scale: Vector3.create(0.055 * s, 0.1 * s, 0.04 * s),
-        rot: Vector3.create(8, 0, wave * 180),
-        shape: 'sphere',
-        material: solid(stripe.hex, 0.55)
+        parent: root,
+        pos: Vector3.create(x * s, 1.36 * s, 0.46 * s),
+        scale: Vector3.create(0.18 * s, 0.14 * s, 0.05 * s),
+        shape: 'box',
+        material: matteBlack
+      })
+      part({
+        parent: root,
+        pos: Vector3.create(x * s * 1.55, 1.4 * s, 0.44 * s),
+        scale: Vector3.create(0.04 * s, 0.04 * s, 0.04 * s),
+        shape: 'box',
+        material: goldAccent
       })
     }
+
+    addSigmaRainbowVomit(root, 1.3 * s, s)
+    scoreTag(root, 'SIGMA +320', '#ffd700', 2.2 * s, true)
+  } finally {
+    simpleBuild = prevSimple
+  }
+}
+
+/** Glowy rainbow stream from the mouth dripping down the chest (mobile-LOD count). */
+function addSigmaRainbowVomit(parent: Entity, headY: number, s: number) {
+  const colors = ['#ff2244', '#ff8a1a', '#ffe566', '#3dff7a', '#4ec4ff', '#c45eff', '#ff66cc']
+  const mouthY = headY - 0.2
+  const mouthZ = 0.5
+  const count = 5
+
+  for (let i = 0; i < count; i++) {
+    const t = i / Math.max(1, count - 1)
+    const wobble = Math.sin(i * 1.7) * 0.04 * s
+    part({
+      parent,
+      pos: Vector3.create(wobble, mouthY - t * 0.72 * s, mouthZ - t * 0.12 * s),
+      scale: Vector3.create((0.1 + t * 0.12) * s, (0.08 + t * 0.06) * s, (0.1 + t * 0.1) * s),
+      rot: Vector3.create(18 + t * 35, wobble * 120, (i % 2 === 0 ? -1 : 1) * (8 + t * 12)),
+      shape: 'sphere',
+      material: glow(colors[i % colors.length], 2.4 + t, 0.25)
+    })
+  }
+
+  const splats = [
+    [0.02, 0.58, 0.28, '#ff2244'],
+    [-0.08, 0.42, 0.26, '#3dff7a'],
+    [0.1, 0.36, 0.24, '#c45eff']
+  ] as const
+
+  for (const [x, y, z, hex] of splats) {
+    part({
+      parent,
+      pos: Vector3.create(x * s, y * s, z * s),
+      scale: Vector3.create(0.16 * s, 0.1 * s, 0.06 * s),
+      rot: Vector3.create(70, x * 80, 12),
+      shape: 'sphere',
+      material: glow(hex, 2.8, 0.22)
+    })
   }
 }
 
@@ -659,5 +648,6 @@ export const KIND_META: Record<
   gyatt: { value: 220, weight: 12, good: true },
   // Fanums spawn on a fixed global timer — keep weight 0 so ambient rolls stay positive
   fanum: { value: -676, weight: 0, good: false },
+  // Rare but not mythical — dedicated timer also guarantees spawns (see brainrots.ts)
   sigma: { value: 320, weight: 1, good: true }
 }

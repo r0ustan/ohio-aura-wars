@@ -1,5 +1,4 @@
 import { engine, TextShape, Transform } from '@dcl/sdk/ecs'
-import { isMobile } from '@dcl/sdk/platform'
 import { Vector3 } from '@dcl/sdk/math'
 import { movePlayerTo, triggerEmote } from '~system/RestrictedActions'
 import {
@@ -289,13 +288,13 @@ function maybeChaosEvent() {
     startSigmaTrail(6)
   } else if (line.includes('Tax')) {
     spawnBrainrot('fanum')
-    if (!isMobile()) spawnBrainrot('fanum')
+    spawnBrainrot('fanum')
   } else if (line.includes('Skibidi')) {
-    const n = isMobile() ? 2 : 4
+    const n = 4
     for (let i = 0; i < n; i++) spawnBrainrot('skibidi')
   } else if (line.includes('JACKPOT') || line.includes('Jackpot')) {
     spawnBrainrot('gyatt')
-    if (!isMobile()) spawnBrainrot('gyatt')
+    spawnBrainrot('gyatt')
   } else if (line.includes('RIZZ') || line.includes('Ohio')) {
     gameState.multiplier = Math.max(gameState.multiplier, 1.5)
     gameState.multiplierTimer = Math.max(gameState.multiplierTimer, 4)
