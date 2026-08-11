@@ -85,19 +85,19 @@ let bonusShell: Entity
 let bonusAura: Entity
 let bonusSparks: Entity
 let bonusLabel: Entity
-let bonusRing: Entity
 let bonusReady = false
 let bonusBobPhase = 0
 let bonusX = 40
 let bonusZ = 24
 let bonusHopTimer = 10
 let bonusWasPlaying = false
-/** 2× previous orb; pickup matches visual size */
-const BONUS_PICKUP_RADIUS = 4.0
-const BONUS_CORE = 1.7
-const BONUS_SHELL = 3.1
-const BONUS_AURA = 4.8
-const BONUS_RING = 4.8
+/** 25% larger than previous orb; pickup matches visual size */
+const BONUS_PICKUP_RADIUS = 5.0
+const BONUS_CORE = 2.125
+const BONUS_SHELL = 3.875
+const BONUS_AURA = 6.0
+const BONUS_BASE_Y = 2.15
+const BONUS_FLOAT_AMP = 0.55
 /** Prevent re-trigger while still standing inside the orb after pickup */
 let bonusInsideLatch = false
 
@@ -120,15 +120,12 @@ function randomBonusSpot() {
 function placeBonusAt(x: number, z: number) {
   bonusX = x
   bonusZ = z
-  const y = 1.7
-  if (Transform.has(bonusRing)) {
-    Transform.getMutable(bonusRing).position = Vector3.create(x, 0.08, z)
-  }
+  const y = BONUS_BASE_Y
   if (Transform.has(bonusAura)) Transform.getMutable(bonusAura).position = Vector3.create(x, y, z)
   if (Transform.has(bonusShell)) Transform.getMutable(bonusShell).position = Vector3.create(x, y, z)
   if (Transform.has(bonusCore)) Transform.getMutable(bonusCore).position = Vector3.create(x, y, z)
   if (Transform.has(bonusSparks)) Transform.getMutable(bonusSparks).position = Vector3.create(x, y, z)
-  if (Transform.has(bonusLabel)) Transform.getMutable(bonusLabel).position = Vector3.create(x, y + 2.4, z)
+  if (Transform.has(bonusLabel)) Transform.getMutable(bonusLabel).position = Vector3.create(x, y + 2.6, z)
 }
 
 function setBonusVisible(visible: boolean) {
@@ -141,7 +138,6 @@ function setBonusVisible(visible: boolean) {
       t.scale = Vector3.create(0, 0, 0)
     }
   }
-  scaleOrHide(bonusRing, BONUS_RING, 0.14, BONUS_RING)
   scaleOrHide(bonusAura, BONUS_AURA, BONUS_AURA, BONUS_AURA)
   scaleOrHide(bonusShell, BONUS_SHELL, BONUS_SHELL, BONUS_SHELL)
   scaleOrHide(bonusCore, BONUS_CORE, BONUS_CORE, BONUS_CORE)
@@ -714,15 +710,7 @@ function buildBonusPedestal() {
   bonusZ = spot.z
   const x = bonusX
   const z = bonusZ
-  const y = 1.7
-
-  bonusRing = engine.addEntity()
-  Transform.create(bonusRing, {
-    position: Vector3.create(x, 0.08, z),
-    scale: Vector3.create(BONUS_RING, 0.14, BONUS_RING)
-  })
-  MeshRenderer.setCylinder(bonusRing)
-  Material.setPbrMaterial(bonusRing, glow('#ffb000', 2.2))
+  const y = BONUS_BASE_Y
 
   bonusAura = engine.addEntity()
   Transform.create(bonusAura, {
@@ -793,7 +781,7 @@ function buildBonusPedestal() {
 
   bonusLabel = engine.addEntity()
   Transform.create(bonusLabel, {
-    position: Vector3.create(x, y + 2.4, z)
+    position: Vector3.create(x, y + 2.6, z)
   })
   TextShape.create(bonusLabel, {
     text: '',
@@ -870,8 +858,8 @@ export function tickBonusPad(dt: number, cooldown: number, playing: boolean) {
   const beat = lub + 0.7 * dub
   const pulse = 1 + 0.28 * beat
   const glowPulse = 4.5 + 5.5 * beat
-  const bob = Math.sin(bonusBobPhase * 0.85) * 0.28
-  const y = 1.7 + bob
+  const bob = Math.sin(bonusBobPhase * 0.85) * BONUS_FLOAT_AMP
+  const y = BONUS_BASE_Y + bob
 
   const coreT = Transform.getMutable(bonusCore)
   coreT.position.x = bonusX
@@ -912,16 +900,6 @@ export function tickBonusPad(dt: number, cooldown: number, playing: boolean) {
       transparencyMode: 1
     })
   }
-  if (Transform.has(bonusRing)) {
-    const ringPulse = 1 + 0.12 * beat
-    Transform.getMutable(bonusRing).position = Vector3.create(bonusX, 0.08, bonusZ)
-    Transform.getMutable(bonusRing).scale = Vector3.create(
-      BONUS_RING * ringPulse,
-      0.14,
-      BONUS_RING * ringPulse
-    )
-    Material.setPbrMaterial(bonusRing, glow('#ffb000', 1.6 + 2.2 * beat))
-  }
   if (Transform.has(bonusSparks)) {
     const sp = Transform.getMutable(bonusSparks)
     sp.position.x = bonusX
@@ -931,7 +909,7 @@ export function tickBonusPad(dt: number, cooldown: number, playing: boolean) {
   if (Transform.has(bonusLabel)) {
     const lb = Transform.getMutable(bonusLabel)
     lb.position.x = bonusX
-    lb.position.y = y + 2.4
+    lb.position.y = y + 2.6
     lb.position.z = bonusZ
   }
 
