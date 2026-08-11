@@ -183,8 +183,8 @@ function scaryFace(parent: Entity, headY: number) {
   }
 }
 
-function scoreTag(parent: Entity, text: string, color: string, y = 2.15) {
-  if (simpleBuild) return null
+function scoreTag(parent: Entity, text: string, color: string, y = 2.15, force = false) {
+  if (simpleBuild && !force) return null
 
   const label = engine.addEntity()
   Transform.create(label, {
@@ -430,7 +430,7 @@ export function buildFanumCharacter(root: Entity) {
     material: glow('#39ff14', 3.5)
   })
   if (simpleBuild) {
-    scoreTag(root, '-676', '#ff2244', 2.75)
+    scoreTag(root, String(KIND_META.fanum.value), '#ff2244', 2.75, true)
     return
   }
   for (const x of [-0.28, 0.28]) {
@@ -497,7 +497,7 @@ export function buildFanumCharacter(root: Entity) {
       material: glow('#8b0000', 2.0)
     })
   }
-  scoreTag(root, '-676', '#ff2244', 2.75)
+  scoreTag(root, String(KIND_META.fanum.value), '#ff2244', 2.75, true)
 }
 
 /** Soft cool chibi sigma — larger; soft body glow; rainbow vomit stripes on shirt */
