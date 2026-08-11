@@ -16,6 +16,7 @@ import {
   tickOhioZoneRelocation,
   tickWallLights
 } from './arena'
+import { SPAWN_LOOK, SPAWN_POS } from './arenaReturnTriggers'
 import {
   brainrotSystem,
   clearBrainrots,
@@ -43,38 +44,6 @@ import { startSigmaTrail, stopSigmaTrail, tickSigmaTrail, isSigmaInvincible } fr
 let chaosTimer = 0
 let bossAngle = 0
 let bossTaxCooldown = 0
-let containCooldown = 0
-
-/**
- * Playable floor is roughly 3–45. If Fanum/boss physics yeets the avatar past
- * the walls (or into the sky / void), hard-teleport back inside so the run continues.
- */
-const PLAYER_ARENA_MIN = 2.5
-const PLAYER_ARENA_MAX = 45.5
-const PLAYER_MAX_Y = 8
-
-function containPlayerInArena(dt: number) {
-  containCooldown = Math.max(0, containCooldown - dt)
-  if (containCooldown > 0) return
-  if (!Transform.has(engine.PlayerEntity)) return
-
-  const p = Transform.get(engine.PlayerEntity).position
-  const outX = p.x < PLAYER_ARENA_MIN || p.x > PLAYER_ARENA_MAX
-  const outZ = p.z < PLAYER_ARENA_MIN || p.z > PLAYER_ARENA_MAX
-  const outY = p.y > PLAYER_MAX_Y || p.y < -0.25
-  if (!outX && !outZ && !outY) return
-
-  // Always dump on center — safer than wall-edge clamps after death / yeets
-  containCooldown = 0.55
-  if (gameState.phase === 'playing') {
-    gameState.chaos = { text: 'BACK IN THE ARENA!', ttl: 1.2 }
-    gameState.announcementFlash = 0.25
-  }
-  void movePlayerTo({
-    newRelativePosition: Vector3.create(ARENA_CENTER.x, 1.5, ARENA_CENTER.z),
-    cameraTarget: Vector3.create(ARENA_CENTER.x, 1.5, ARENA_CENTER.z + 6)
-  }).catch(() => undefined)
-}
 
 /** Camping on the center play sphere with no movement drains aura */
 const CAMP_RADIUS = 5.5
@@ -96,10 +65,10 @@ function finishRun() {
   submitRunScore(peak)
   updateScoreboard()
   setStartControlsVisible(true)
-  // Death can leave you stuck outside walls — snap back to the play pad
+  // Death can leave you stuck outside walls — snap to spawn (exterior triggers also catch this)
   void movePlayerTo({
-    newRelativePosition: Vector3.create(ARENA_CENTER.x, 1.5, ARENA_CENTER.z),
-    cameraTarget: Vector3.create(ARENA_CENTER.x, 1.5, ARENA_CENTER.z + 6)
+    newRelativePosition: SPAWN_POS,
+    cameraTarget: SPAWN_LOOK
   }).catch(() => undefined)
   void triggerEmote({
     predefinedEmote: peak >= 5000 ? 'clap' : 'wave'
@@ -305,7 +274,6 @@ export function gameSystem(dt: number) {
   tickGameMusic(dt)
   tickBonusPad(dt, gameState.gyattCooldown, gameState.phase === 'playing')
   tickSigmaTrail(dt)
-  containPlayerInArena(dt)
   tickLowAuraHeartbeat(
     gameState.phase === 'playing' && gameState.aura < STARTING_AURA
   )
