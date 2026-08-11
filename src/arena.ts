@@ -93,7 +93,7 @@ let bonusHopTimer = 10
 let bonusWasPlaying = false
 /** Pickup + visual scale for Tron Bit */
 const BONUS_PICKUP_RADIUS = 5.0
-const BONUS_ROOT_SCALE = 1.55
+const BONUS_ROOT_SCALE = 1.24
 /** High enough that standing won't reach — jump required */
 const BONUS_BASE_Y = 4.35
 const BONUS_FLOAT_AMP = 0.45
@@ -841,7 +841,7 @@ export function tickBonusPad(dt: number, cooldown: number, playing: boolean) {
   )
 
   // Morph across soft → mid → star → soft (Bit-style shape shifts)
-  const cycle = (bonusBobPhase * 0.28) % 3
+  const cycle = (bonusBobPhase * 0.85) % 3
   const i0 = Math.floor(cycle) % 3
   const i1 = (i0 + 1) % 3
   const t = cycle - Math.floor(cycle)
