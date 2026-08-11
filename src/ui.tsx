@@ -382,30 +382,67 @@ function GameOver() {
   )
 }
 
-/** Bottom chaos flash — leave size alone (fontSize 28). */
+/** Center-screen chaos announcements — large & bouncy, no point values. */
 function Popup() {
   const text = gameState.chaos ? gameState.chaos.text : ''
-  const bad = text.startsWith('-') || text.includes('tax')
+  if (!text) return null
+
+  const bad =
+    text.includes('TAX') ||
+    text.includes('DRAIN') ||
+    text.includes('CAMPING') ||
+    text.includes('Fanum') ||
+    text.includes('red')
+  const bounce = 1 + 0.22 * Math.abs(Math.sin(gameState.hudBeat * 7.5))
+  const fontSize = Math.round(72 * bounce)
+
   return (
     <UiEntity
       uiTransform={{
-        width: 420,
-        height: 64,
+        width: '100%',
+        height: '100%',
         positionType: 'absolute',
-        position: { bottom: 60 },
+        position: { top: 0, left: 0 },
         display: 'flex',
+        justifyContent: 'center',
         alignItems: 'center',
-        justifyContent: 'center'
+        pointerFilter: 'none'
       }}
-      uiBackground={{ color: panel }}
     >
-      <Label
-        value={text}
-        fontSize={28}
-        color={bad ? red : green}
-        textAlign="middle-center"
-        uiTransform={{ width: '100%', height: '100%' }}
-      />
+      <UiEntity
+        uiTransform={{
+          width: 1400,
+          height: 180,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          pointerFilter: 'none'
+        }}
+      >
+        {OUTLINE_OFFSETS.map((off, i) => (
+          <Label
+            key={`c${i}`}
+            value={text}
+            fontSize={fontSize}
+            color={outline}
+            textAlign="middle-center"
+            uiTransform={{
+              width: 1400,
+              height: 180,
+              positionType: 'absolute',
+              position: { left: off.left * 2, top: off.top * 2 },
+              pointerFilter: 'none'
+            }}
+          />
+        ))}
+        <Label
+          value={text}
+          fontSize={fontSize}
+          color={bad ? red : gold}
+          textAlign="middle-center"
+          uiTransform={{ width: 1400, height: 180, pointerFilter: 'none' }}
+        />
+      </UiEntity>
     </UiEntity>
   )
 }

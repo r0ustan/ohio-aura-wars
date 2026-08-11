@@ -121,7 +121,7 @@ function tickCampingPenalty(dt: number) {
     gameState.aura = Math.max(0, gameState.aura - CAMP_DRAIN)
     gameState.combo = 0
     gameState.comboTimer = 0
-    gameState.chaos = { text: `-${lost}  no camping!`, ttl: 1.0 }
+    gameState.chaos = { text: 'NO CAMPING!', ttl: 1.0 }
     gameState.announcementFlash = 0.25
     spawnScorePopup(Vector3.create(p.x, p.y, p.z), -lost, false)
     playScoreSfx()
@@ -137,7 +137,7 @@ export function fireGyattButton() {
   gameState.hits += 1
   gameState.combo += 3
   gameState.comboTimer = COMBO_WINDOW
-  gameState.chaos = { text: `+${gained}`, ttl: 1.6 }
+  gameState.chaos = { text: 'BONUS ORB!', ttl: 1.6 }
   gameState.announcementFlash = 0.4
   playBonusSfx()
 
@@ -217,7 +217,7 @@ function updateBoss(dt: number) {
     gameState.combo = 0
     gameState.comboTimer = 0
     gameState.chaos = {
-      text: lost > 0 ? `-${lost}  SKIBIDI DRAIN` : 'SKIBIDI!',
+      text: 'SKIBIDI DRAIN!',
       ttl: 1.6
     }
     gameState.announcementFlash = 0.4

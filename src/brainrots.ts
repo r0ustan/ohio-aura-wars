@@ -362,12 +362,9 @@ function collectGoodBrainrot(entity: Entity) {
   if (kind === 'sigma') {
     gameState.multiplier = 2.5
     gameState.multiplierTimer = 5
-    gameState.chaos = { text: `+${gained}  SIGMA BOOST`, ttl: 1.6 }
-  } else {
-    gameState.chaos = { text: `+${gained}`, ttl: 1.0 }
+    gameState.chaos = { text: 'SIGMA BOOST', ttl: 1.6 }
+    gameState.announcementFlash = 0.25
   }
-
-  gameState.announcementFlash = 0.25
 
   const pos = Transform.get(entity).position
   spawnScorePopup(pos, gained, true)
@@ -425,7 +422,7 @@ function taxAndPushBad(entity: Entity, playerPos: Vector3, playerVx: number, pla
     gameState.combo = 0
     gameState.comboTimer = 0
     const lost = addAura(data.value)
-    gameState.chaos = { text: `-${Math.abs(lost)}  taxed`, ttl: 1.4 }
+    gameState.chaos = { text: 'TAXED!', ttl: 1.4 }
     gameState.announcementFlash = 0.25
     spawnScorePopup(t.position, lost, false)
     playScoreSfx()

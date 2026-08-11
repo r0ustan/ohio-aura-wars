@@ -96,8 +96,11 @@ const BONUS_PICKUP_RADIUS = 5.0
 const BONUS_CORE = 2.125
 const BONUS_SHELL = 3.875
 const BONUS_AURA = 6.0
-const BONUS_BASE_Y = 2.15
-const BONUS_FLOAT_AMP = 0.55
+/** High enough that standing won't reach — jump required */
+const BONUS_BASE_Y = 4.35
+const BONUS_FLOAT_AMP = 0.45
+/** Player feet must clear this to collect (approx jump height) */
+const BONUS_MIN_PLAYER_Y = 2.35
 /** Prevent re-trigger while still standing inside the orb after pickup */
 let bonusInsideLatch = false
 
@@ -921,7 +924,8 @@ export function tickBonusPad(dt: number, cooldown: number, playing: boolean) {
   const p = Transform.get(engine.PlayerEntity).position
   const dx = p.x - bonusX
   const dz = p.z - bonusZ
-  const near = dx * dx + dz * dz <= BONUS_PICKUP_RADIUS * BONUS_PICKUP_RADIUS
+  const near =
+    dx * dx + dz * dz <= BONUS_PICKUP_RADIUS * BONUS_PICKUP_RADIUS && p.y >= BONUS_MIN_PLAYER_Y
 
   if (!near) {
     bonusInsideLatch = false
