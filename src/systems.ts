@@ -1,7 +1,7 @@
 import { engine, TextShape, Transform } from '@dcl/sdk/ecs'
 import { isMobile } from '@dcl/sdk/platform'
 import { Vector3 } from '@dcl/sdk/math'
-import { triggerEmote } from '~system/RestrictedActions'
+import { movePlayerTo, triggerEmote } from '~system/RestrictedActions'
 import {
   ARENA_CENTER,
   floorTileSystem,
@@ -44,6 +44,49 @@ import { startSigmaTrail, stopSigmaTrail, tickSigmaTrail, isSigmaInvincible } fr
 let chaosTimer = 0
 let bossAngle = 0
 let bossTaxCooldown = 0
+let containCooldown = 0
+
+/** Soft clamp if physics yeets the avatar past the walls / into the sky */
+const PLAYER_ARENA_MIN = 1.6
+const PLAYER_ARENA_MAX = 46.4
+const PLAYER_MAX_Y = 10
+
+function containPlayerInArena(dt: number) {
+  containCooldown = Math.max(0, containCooldown - dt)
+  if (containCooldown > 0) return
+  if (!Transform.has(engine.PlayerEntity)) return
+
+  const p = Transform.get(engine.PlayerEntity).position
+  let x = p.x
+  let y = p.y
+  let z = p.z
+  let fix = false
+
+  if (x < PLAYER_ARENA_MIN) {
+    x = PLAYER_ARENA_MIN + 0.8
+    fix = true
+  } else if (x > PLAYER_ARENA_MAX) {
+    x = PLAYER_ARENA_MAX - 0.8
+    fix = true
+  }
+  if (z < PLAYER_ARENA_MIN) {
+    z = PLAYER_ARENA_MIN + 0.8
+    fix = true
+  } else if (z > PLAYER_ARENA_MAX) {
+    z = PLAYER_ARENA_MAX - 0.8
+    fix = true
+  }
+  if (y > PLAYER_MAX_Y || y < -0.5) {
+    y = 1.2
+    fix = true
+  }
+
+  if (!fix) return
+  containCooldown = 0.4
+  void movePlayerTo({
+    newRelativePosition: Vector3.create(x, Math.max(0.4, y), z)
+  }).catch(() => undefined)
+}
 
 /** Camping on the center play sphere with no movement drains aura */
 const CAMP_RADIUS = 5.5
@@ -250,10 +293,10 @@ function maybeChaosEvent() {
   } else if (line.includes('Skibidi')) {
     const n = isMobile() ? 2 : 4
     for (let i = 0; i < n; i++) spawnBrainrot('skibidi')
-  } else if (line.includes('Jackpot')) {
+  } else if (line.includes('JACKPOT') || line.includes('Jackpot')) {
     spawnBrainrot('gyatt')
     if (!isMobile()) spawnBrainrot('gyatt')
-  } else if (line.includes('Ohio')) {
+  } else if (line.includes('RIZZ') || line.includes('Ohio')) {
     gameState.multiplier = Math.max(gameState.multiplier, 1.5)
     gameState.multiplierTimer = Math.max(gameState.multiplierTimer, 4)
   }
@@ -269,6 +312,7 @@ export function gameSystem(dt: number) {
   tickGameMusic(dt)
   tickBonusPad(dt, gameState.gyattCooldown, gameState.phase === 'playing')
   tickSigmaTrail(dt)
+  containPlayerInArena(dt)
 
   // Timers shared across phases for UI fade
   if (gameState.chaos) {

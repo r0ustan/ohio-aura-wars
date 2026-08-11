@@ -348,8 +348,9 @@ function buildFloor() {
       FloorTile.create(tile, {
         baseY: 0.05,
         phase: Math.random() * Math.PI * 2,
-        speed: inOhio ? 0.9 + Math.random() * 2.2 : 0.7 + Math.random() * 2.4,
-        amp: inOhio ? 0.2 + Math.random() * 0.9 : 0.15 + Math.random() * 1.1
+        speed: inOhio ? 0.9 + Math.random() * 1.6 : 0.7 + Math.random() * 1.8,
+        // Keep bounce modest — tall physics tiles launch players out of the arena
+        amp: inOhio ? 0.12 + Math.random() * 0.32 : 0.1 + Math.random() * 0.38
       })
 
       const edges = addTileEdgeGlow(tile, inOhio ? '#ff4ec7' : '#3db8ff')
@@ -413,11 +414,11 @@ export function floorTileSystem(dt: number) {
     tile.phase += dt * tile.speed
     // Occasional speed/amp jitter for unpredictability
     if (Math.random() < 0.002) {
-      tile.speed = 0.6 + Math.random() * 2.8
-      tile.amp = 0.12 + Math.random() * 1.25
+      tile.speed = 0.55 + Math.random() * 1.9
+      tile.amp = 0.1 + Math.random() * 0.35
     }
     const t = Transform.getMutable(entity)
-    t.position.y = tile.baseY + (0.5 + 0.5 * Math.sin(tile.phase)) * tile.amp
+    t.position.y = tile.baseY + (0.5 + 0.5 * Math.sin(tile.phase)) * Math.min(tile.amp, 0.45)
   }
 }
 
@@ -476,6 +477,16 @@ function buildWalls() {
   addBarrier(Vector3.create(24, barrierH / 2, 0.4), Vector3.create(48, barrierH, t + 0.15))
   addBarrier(Vector3.create(0.4, barrierH / 2, 24), Vector3.create(t + 0.15, barrierH, 48))
   addBarrier(Vector3.create(47.6, barrierH / 2, 24), Vector3.create(t + 0.15, barrierH, 48))
+  // Corner pillars — close the seams where side walls meet
+  const corner = 1.2
+  for (const [x, z] of [
+    [0.4, 0.4],
+    [0.4, 47.6],
+    [47.6, 0.4],
+    [47.6, 47.6]
+  ] as const) {
+    addBarrier(Vector3.create(x, barrierH / 2, z), Vector3.create(corner, barrierH, corner))
+  }
 
   // Flowing emissive bands — phase runs around the arena perimeter
   const segs = 8
@@ -910,8 +921,9 @@ function buildBossToilet() {
     scale: Vector3.create(2.3, 1.25, 2.3)
   })
   MeshRenderer.setCylinder(bowl)
-  MeshCollider.setCylinder(bowl)
   Material.setPbrMaterial(bowl, ceramic('#f0f0f4'))
+  // No MeshCollider on the boss — drain is distance-based. A moving physics
+  // cylinder yeets avatars when the toilet sweeps through crowded fights.
 
   const tank = engine.addEntity()
   Transform.create(tank, {

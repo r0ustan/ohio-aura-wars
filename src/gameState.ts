@@ -88,10 +88,10 @@ export function getRank(aura: number): Rank {
 export const CHAOS_LINES = [
   'Tax collectors incoming!',
   'Skibidi rush!',
-  'Jackpot spawn!',
+  'Gyatt Ya! JACKPOT!',
   'Sigma boost!',
-  'Ohio energy rising!',
-  'Watch the red ones!'
+  'So much RIZZ!',
+  'Watch the toothy ones!'
 ]
 
 export function resetRound() {

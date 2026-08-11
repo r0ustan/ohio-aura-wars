@@ -47,8 +47,10 @@ const PICKUP_RADIUS = 1.85
 const BUMP_RADIUS = 2.1
 /** Player feet above this = cleared the Fanum (double-jump safe) */
 const FANUM_CLEAR_HEIGHT = 1.35
-const MAX_SLIDE_SPEED = 18
+const MAX_SLIDE_SPEED = 8
 const FRICTION = 2.8
+/** Soft min distance so Fanum physics boxes don't dig into the avatar (yeets) */
+const FANUM_MIN_SEP = 1.25
 const ARENA_MIN = 3
 const ARENA_MAX = 45
 /** Goods still capped; Fanums never stop spawning (oldest recycled past soft cap). */
@@ -329,7 +331,6 @@ export function spawnBrainrot(
   })
 
   if (!meta.good) {
-    addBadCollider(root, parts)
     BrainrotMotion.create(root, {
       vx: 0,
       vz: 0,
@@ -433,10 +434,17 @@ function taxAndPushBad(entity: Entity, playerPos: Vector3, playerVx: number, pla
   const nx = awayX / len
   const nz = awayZ / len
 
+  // Keep a soft gap so the kinematic collider doesn't penetrate the avatar
+  if (len < FANUM_MIN_SEP) {
+    t.position.x = playerPos.x + nx * FANUM_MIN_SEP
+    t.position.z = playerPos.z + nz * FANUM_MIN_SEP
+  }
+
   const playerSpeed = Math.sqrt(playerVx * playerVx + playerVz * playerVz)
   // How hard the player is running into them (toward the character)
   const intoThem = Math.max(0, -(playerVx * nx + playerVz * nz))
-  const desiredOut = 5.5 + playerSpeed * 0.75 + intoThem * 0.9
+  // Mild shove — hard kinematic slides were launching players out of the arena
+  const desiredOut = 3.2 + playerSpeed * 0.35 + intoThem * 0.45
   const currentOut = motion.vx * nx + motion.vz * nz
   if (desiredOut > currentOut) {
     const add = desiredOut - currentOut

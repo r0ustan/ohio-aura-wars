@@ -430,7 +430,7 @@ export function buildFanumCharacter(root: Entity) {
     material: glow('#39ff14', 3.5)
   })
   if (simpleBuild) {
-    scoreTag(root, '-160', '#ff2244', 2.75)
+    scoreTag(root, '-375', '#ff2244', 2.75)
     return
   }
   for (const x of [-0.28, 0.28]) {
@@ -497,90 +497,91 @@ export function buildFanumCharacter(root: Entity) {
       material: glow('#8b0000', 2.0)
     })
   }
-  scoreTag(root, '-160', '#ff2244', 2.75)
+  scoreTag(root, '-375', '#ff2244', 2.75)
 }
 
-/** Soft cool chibi sigma */
+/** Soft cool chibi sigma — larger + emissive so it reads as a rare pickup */
 export function buildSigmaCharacter(root: Entity) {
+  const s = 1.28
   part({
     parent: root,
-    pos: Vector3.create(0, 0.5, 0),
-    scale: Vector3.create(0.65, 0.85, 0.45),
+    pos: Vector3.create(0, 0.5 * s, 0),
+    scale: Vector3.create(0.65 * s, 0.85 * s, 0.45 * s),
     shape: 'box',
-    material: solid('#2ec4b6', 0.35, 0.15)
+    material: glow('#2ec4b6', 2.4, 0.28)
   })
   if (!simpleBuild) {
     part({
       parent: root,
-      pos: Vector3.create(0, 0.6, 0.24),
-      scale: Vector3.create(0.2, 0.55, 0.05),
+      pos: Vector3.create(0, 0.6 * s, 0.24 * s),
+      scale: Vector3.create(0.2 * s, 0.55 * s, 0.05 * s),
       shape: 'box',
       material: plastic('#fff8f0', 0.35)
     })
     part({
       parent: root,
-      pos: Vector3.create(0, 0.55, 0.28),
-      scale: Vector3.create(0.08, 0.35, 0.05),
+      pos: Vector3.create(0, 0.55 * s, 0.28 * s),
+      scale: Vector3.create(0.08 * s, 0.35 * s, 0.05 * s),
       shape: 'box',
-      material: glow('#ffd700', 1.4)
+      material: glow('#ffd700', 3.2)
     })
   }
   part({
     parent: root,
-    pos: Vector3.create(0, 1.3, 0),
-    scale: Vector3.create(0.9, 0.9, 0.9),
+    pos: Vector3.create(0, 1.3 * s, 0),
+    scale: Vector3.create(0.9 * s, 0.9 * s, 0.9 * s),
     shape: 'sphere',
-    material: plastic('#ffe0c8')
+    material: glow('#ffe0c8', 0.85, 0.4)
   })
-  cuteFace(root, 1.3)
+  cuteFace(root, 1.3 * s)
   // Gold frames — keep clear of Fanum black
   part({
     parent: root,
-    pos: Vector3.create(0, 1.38, 0.42),
-    scale: Vector3.create(0.7, 0.2, 0.14),
+    pos: Vector3.create(0, 1.38 * s, 0.42 * s),
+    scale: Vector3.create(0.7 * s, 0.2 * s, 0.14 * s),
     shape: 'box',
-    material: solid('#e8c04a', 0.3, 0.65)
+    material: glow('#e8c04a', 2.8, 0.25)
   })
   if (simpleBuild) {
-    scoreTag(root, '+320', '#ffd700', 2.2)
+    scoreTag(root, '+320', '#ffd700', 2.2 * s)
     return
   }
   for (const x of [-0.22, 0.22]) {
     part({
       parent: root,
-      pos: Vector3.create(x, 1.38, 0.48),
-      scale: Vector3.create(0.28, 0.22, 0.08),
+      pos: Vector3.create(x * s, 1.38 * s, 0.48 * s),
+      scale: Vector3.create(0.28 * s, 0.22 * s, 0.08 * s),
       shape: 'sphere',
-      material: glow('#4ec4ff', 1.2)
+      material: glow('#4ec4ff', 2.6)
     })
   }
   part({
     parent: root,
-    pos: Vector3.create(0.1, 1.75, -0.05),
-    scale: Vector3.create(0.75, 0.35, 0.65),
+    pos: Vector3.create(0.1 * s, 1.75 * s, -0.05 * s),
+    scale: Vector3.create(0.75 * s, 0.35 * s, 0.65 * s),
     shape: 'sphere',
-    material: solid('#c4924a', 0.55)
+    material: glow('#e0b45a', 1.6, 0.4)
   })
   for (const x of [-0.45, 0.45]) {
     part({
       parent: root,
-      pos: Vector3.create(x, 0.55, 0.1),
-      scale: Vector3.create(0.18, 0.35, 0.18),
+      pos: Vector3.create(x * s, 0.55 * s, 0.1 * s),
+      scale: Vector3.create(0.18 * s, 0.35 * s, 0.18 * s),
       rot: Vector3.create(40, 0, x < 0 ? 15 : -15),
       shape: 'sphere',
-      material: plastic('#ffe0c8')
+      material: glow('#ffe0c8', 0.7, 0.4)
     })
   }
   for (const x of [-0.18, 0.18]) {
     part({
       parent: root,
-      pos: Vector3.create(x, 0.08, 0.05),
-      scale: Vector3.create(0.2, 0.12, 0.28),
+      pos: Vector3.create(x * s, 0.08 * s, 0.05 * s),
+      scale: Vector3.create(0.2 * s, 0.12 * s, 0.28 * s),
       shape: 'box',
-      material: solid('#f0d9a8', 0.45)
+      material: glow('#f0d9a8', 1.1, 0.35)
     })
   }
-  scoreTag(root, '+320', '#ffd700', 2.2)
+  scoreTag(root, '+320', '#ffd700', 2.55 * s)
 }
 
 export function buildCharacterVisual(kind: BrainrotKind, root: Entity, parts?: Entity[]) {
@@ -618,6 +619,6 @@ export const KIND_META: Record<
   skibidi: { value: 100, weight: 26, good: true },
   gyatt: { value: 220, weight: 12, good: true },
   // Fanums spawn on a fixed global timer — keep weight 0 so ambient rolls stay positive
-  fanum: { value: -160, weight: 0, good: false },
-  sigma: { value: 320, weight: 10, good: true }
+  fanum: { value: -375, weight: 0, good: false },
+  sigma: { value: 320, weight: 4, good: true }
 }

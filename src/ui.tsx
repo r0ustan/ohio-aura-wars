@@ -394,7 +394,10 @@ function Popup() {
     text.includes('Fanum') ||
     text.includes('red')
   const bounce = 1 + 0.22 * Math.abs(Math.sin(gameState.hudBeat * 7.5))
-  const fontSize = Math.round(72 * bounce)
+  const bigAnnounce = text.includes('SKIBIDI DRAIN') || text.includes('VAPORIZED')
+  const fontSize = Math.round((bigAnnounce ? 108 : 72) * bounce)
+  const boxW = bigAnnounce ? 1600 : 1400
+  const boxH = bigAnnounce ? 270 : 180
 
   return (
     <UiEntity
@@ -411,8 +414,8 @@ function Popup() {
     >
       <UiEntity
         uiTransform={{
-          width: 1400,
-          height: 180,
+          width: boxW,
+          height: boxH,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -427,8 +430,8 @@ function Popup() {
             color={outline}
             textAlign="middle-center"
             uiTransform={{
-              width: 1400,
-              height: 180,
+              width: boxW,
+              height: boxH,
               positionType: 'absolute',
               position: { left: off.left * 2, top: off.top * 2 },
               pointerFilter: 'none'
@@ -440,7 +443,7 @@ function Popup() {
           fontSize={fontSize}
           color={bad ? red : gold}
           textAlign="middle-center"
-          uiTransform={{ width: 1400, height: 180, pointerFilter: 'none' }}
+          uiTransform={{ width: boxW, height: boxH, pointerFilter: 'none' }}
         />
       </UiEntity>
     </UiEntity>
