@@ -430,7 +430,7 @@ export function buildFanumCharacter(root: Entity) {
     material: glow('#39ff14', 3.5)
   })
   if (simpleBuild) {
-    scoreTag(root, '-222', '#ff2244', 2.75)
+    scoreTag(root, '-676', '#ff2244', 2.75)
     return
   }
   for (const x of [-0.28, 0.28]) {
@@ -497,10 +497,10 @@ export function buildFanumCharacter(root: Entity) {
       material: glow('#8b0000', 2.0)
     })
   }
-  scoreTag(root, '-222', '#ff2244', 2.75)
+  scoreTag(root, '-676', '#ff2244', 2.75)
 }
 
-/** Soft cool chibi sigma — larger + emissive body; rainbow vomit on the shirt */
+/** Soft cool chibi sigma — larger; soft body glow; rainbow vomit stripes on shirt */
 export function buildSigmaCharacter(root: Entity) {
   const s = 1.28
   part({
@@ -508,7 +508,7 @@ export function buildSigmaCharacter(root: Entity) {
     pos: Vector3.create(0, 0.5 * s, 0),
     scale: Vector3.create(0.65 * s, 0.85 * s, 0.45 * s),
     shape: 'box',
-    material: glow('#2ec4b6', 2.4, 0.28)
+    material: glow('#2ec4b6', 0.7, 0.35)
   })
   if (!simpleBuild) {
     part({
@@ -523,7 +523,7 @@ export function buildSigmaCharacter(root: Entity) {
       pos: Vector3.create(0, 0.55 * s, 0.28 * s),
       scale: Vector3.create(0.08 * s, 0.35 * s, 0.05 * s),
       shape: 'box',
-      material: glow('#ffd700', 3.2)
+      material: glow('#ffd700', 1.2)
     })
   }
   // Head — no emission (skin stays matte)
@@ -541,11 +541,11 @@ export function buildSigmaCharacter(root: Entity) {
     pos: Vector3.create(0, 1.38 * s, 0.42 * s),
     scale: Vector3.create(0.7 * s, 0.2 * s, 0.14 * s),
     shape: 'box',
-    material: glow('#e8c04a', 2.8, 0.25)
+    material: glow('#e8c04a', 1.4, 0.3)
   })
 
-  // Rainbow vomit streaming from mouth onto the shirt
-  addSigmaRainbowVomit(root, 1.3 * s, s)
+  // Four wavy rainbow stripes on the shirt (mouth → chest)
+  addSigmaRainbowVomit(root, s)
 
   if (simpleBuild) {
     scoreTag(root, '+320', '#ffd700', 2.2 * s)
@@ -557,7 +557,7 @@ export function buildSigmaCharacter(root: Entity) {
       pos: Vector3.create(x * s, 1.38 * s, 0.48 * s),
       scale: Vector3.create(0.28 * s, 0.22 * s, 0.08 * s),
       shape: 'sphere',
-      material: glow('#4ec4ff', 2.6)
+      material: glow('#4ec4ff', 1.3)
     })
   }
   part({
@@ -565,7 +565,7 @@ export function buildSigmaCharacter(root: Entity) {
     pos: Vector3.create(0.1 * s, 1.75 * s, -0.05 * s),
     scale: Vector3.create(0.75 * s, 0.35 * s, 0.65 * s),
     shape: 'sphere',
-    material: glow('#e0b45a', 1.6, 0.4)
+    material: glow('#e0b45a', 0.8, 0.45)
   })
   for (const x of [-0.45, 0.45]) {
     part({
@@ -583,61 +583,43 @@ export function buildSigmaCharacter(root: Entity) {
       pos: Vector3.create(x * s, 0.08 * s, 0.05 * s),
       scale: Vector3.create(0.2 * s, 0.12 * s, 0.28 * s),
       shape: 'box',
-      material: glow('#f0d9a8', 1.1, 0.35)
+      material: solid('#f0d9a8', 0.45)
     })
   }
   scoreTag(root, '+320', '#ffd700', 2.55 * s)
 }
 
-/** Glowy rainbow stream from the mouth dripping down the chest. */
-function addSigmaRainbowVomit(parent: Entity, headY: number, s: number) {
-  const colors = ['#ff2244', '#ff8a1a', '#ffe566', '#3dff7a', '#4ec4ff', '#c45eff', '#ff66cc']
-  const mouthY = headY - 0.2
-  const mouthZ = 0.5
-  const count = simpleBuild ? 5 : colors.length
+/**
+ * Four vertical wavy vomit lines on the shirt, L→R: red, yellow, light blue, green.
+ * Matte — no emission.
+ */
+function addSigmaRainbowVomit(parent: Entity, s: number) {
+  const stripes: Array<{ x: number; hex: string; phase: number }> = [
+    { x: -0.16, hex: '#ff2244', phase: 0 },
+    { x: -0.05, hex: '#ffe566', phase: 1.1 },
+    { x: 0.05, hex: '#7ad8ff', phase: 2.2 },
+    { x: 0.16, hex: '#3dff7a', phase: 3.3 }
+  ]
+  // From upper chest / mouth down the shirt front
+  const topY = 0.95
+  const botY = 0.22
+  const z = 0.3
+  const segments = simpleBuild ? 5 : 8
 
-  for (let i = 0; i < count; i++) {
-    const t = i / Math.max(1, count - 1)
-    const wobble = Math.sin(i * 1.7) * 0.04 * s
-    part({
-      parent,
-      pos: Vector3.create(wobble, mouthY - t * 0.72 * s, mouthZ - t * 0.12 * s),
-      scale: Vector3.create(
-        (0.1 + t * 0.12) * s,
-        (0.08 + t * 0.06) * s,
-        (0.1 + t * 0.1) * s
-      ),
-      rot: Vector3.create(18 + t * 35, wobble * 120, (i % 2 === 0 ? -1 : 1) * (8 + t * 12)),
-      shape: 'sphere',
-      material: glow(colors[i % colors.length], 2.4 + t, 0.25)
-    })
-  }
-
-  // Shirt splats
-  const splats = simpleBuild
-    ? ([
-        [0.02, 0.58, 0.28, '#ff2244'],
-        [-0.08, 0.42, 0.26, '#3dff7a'],
-        [0.1, 0.36, 0.24, '#c45eff']
-      ] as const)
-    : ([
-        [0.02, 0.62, 0.3, '#ff2244'],
-        [-0.12, 0.48, 0.28, '#ffe566'],
-        [0.14, 0.44, 0.27, '#4ec4ff'],
-        [-0.04, 0.34, 0.26, '#ff66cc'],
-        [0.08, 0.28, 0.25, '#3dff7a'],
-        [-0.1, 0.24, 0.24, '#ff8a1a']
-      ] as const)
-
-  for (const [x, y, z, hex] of splats) {
-    part({
-      parent,
-      pos: Vector3.create(x * s, y * s, z * s),
-      scale: Vector3.create(0.16 * s, 0.1 * s, 0.06 * s),
-      rot: Vector3.create(70, x * 80, 12),
-      shape: 'sphere',
-      material: glow(hex, 2.8, 0.22)
-    })
+  for (const stripe of stripes) {
+    for (let i = 0; i < segments; i++) {
+      const t = i / (segments - 1)
+      const y = topY - t * (topY - botY)
+      const wave = Math.sin(t * Math.PI * 2.4 + stripe.phase) * 0.035
+      part({
+        parent,
+        pos: Vector3.create((stripe.x + wave) * s, y * s, z * s),
+        scale: Vector3.create(0.055 * s, 0.1 * s, 0.04 * s),
+        rot: Vector3.create(8, 0, wave * 180),
+        shape: 'sphere',
+        material: solid(stripe.hex, 0.55)
+      })
+    }
   }
 }
 
@@ -676,6 +658,6 @@ export const KIND_META: Record<
   skibidi: { value: 100, weight: 26, good: true },
   gyatt: { value: 220, weight: 12, good: true },
   // Fanums spawn on a fixed global timer — keep weight 0 so ambient rolls stay positive
-  fanum: { value: -222, weight: 0, good: false },
+  fanum: { value: -676, weight: 0, good: false },
   sigma: { value: 320, weight: 1, good: true }
 }

@@ -244,7 +244,7 @@ function updateBoss(dt: number) {
   const boss = getBossEntity()
   if (!boss || !Transform.has(boss)) return
 
-  bossAngle += dt * 0.55
+  bossAngle += dt * 0.68
   const radius = 14
   const t = Transform.getMutable(boss)
   t.position = Vector3.create(24 + Math.cos(bossAngle) * radius, 0, 24 + Math.sin(bossAngle) * radius)
