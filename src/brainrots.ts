@@ -10,6 +10,7 @@ import { isMobile } from '@dcl/sdk/platform'
 import { Quaternion, Vector3 } from '@dcl/sdk/math'
 import { addAura, gameState } from './gameState'
 import { BrainrotKind, buildCharacterVisual, KIND_META } from './characters'
+import { acquireGodpull, releaseGodpull } from './godpullPool'
 import { lightningSystem, spawnLightningWarning } from './lightningStrike'
 import { mistBurstSystem, spawnMistBurst } from './mistBurst'
 import { scorePopupSystem, spawnScorePopup } from './scorePopup'
@@ -244,7 +245,11 @@ function randomFanumPos() {
 function destroyBrainrotTree(root: Entity) {
   const parts = treeParts.get(root)
   if (parts) {
-    for (const e of parts) engine.removeEntity(e)
+    for (const e of parts) {
+      // Godpull chibis return to the shared instance pool (GLB stays loaded)
+      if (releaseGodpull(e)) continue
+      engine.removeEntity(e)
+    }
     treeParts.delete(root)
   } else {
     const toRemove: Entity[] = []
@@ -260,7 +265,10 @@ function destroyBrainrotTree(root: Entity) {
         p = Transform.get(p).parent
       }
     }
-    for (const e of toRemove) engine.removeEntity(e)
+    for (const e of toRemove) {
+      if (releaseGodpull(e)) continue
+      engine.removeEntity(e)
+    }
   }
   active.delete(root)
   engine.removeEntity(root)
@@ -379,13 +387,20 @@ export function spawnBrainrot(
     position: Vector3.create(pos.x, 0, pos.z)
   })
 
-  const visual = engine.addEntity()
-  Transform.create(visual, {
-    parent: root,
-    position: Vector3.create(0, 0, 0)
-  })
-  const parts: Entity[] = [visual]
-  buildCharacterVisual(kind, visual, parts)
+  const parts: Entity[] = []
+  if (kind === 'gyatt') {
+    // Pooled animated Godpull — one GLB asset, reused entity instances
+    parts.push(acquireGodpull(root))
+    buildCharacterVisual(kind, root, parts)
+  } else {
+    const visual = engine.addEntity()
+    Transform.create(visual, {
+      parent: root,
+      position: Vector3.create(0, 0, 0)
+    })
+    parts.push(visual)
+    buildCharacterVisual(kind, visual, parts)
+  }
   treeParts.set(root, parts)
 
   Brainrot.create(root, {

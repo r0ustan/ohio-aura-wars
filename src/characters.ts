@@ -322,76 +322,12 @@ export function buildSkibidiCharacter(root: Entity) {
   scoreTag(root, '+100', '#3dff7a', 2.25)
 }
 
-/** Cute chibi jackpot girl */
+/**
+ * Gyatt jackpot chibi — animated Godpull GLB via shared instance pool.
+ * Visual attach happens in brainrots spawn (acquireGodpull); label only here.
+ */
 export function buildGyattCharacter(root: Entity) {
-  part({
-    parent: root,
-    pos: Vector3.create(0, 0.45, 0),
-    scale: Vector3.create(0.85, 0.8, 0.7),
-    shape: 'sphere',
-    material: plastic('#ff8ec8')
-  })
-  if (!simpleBuild) {
-    part({
-      parent: root,
-      pos: Vector3.create(0, 0.28, 0),
-      scale: Vector3.create(1.05, 0.35, 0.9),
-      shape: 'sphere',
-      material: plastic('#ff6eb4')
-    })
-  }
-  part({
-    parent: root,
-    pos: Vector3.create(0, 1.25, 0),
-    scale: Vector3.create(0.95, 0.95, 0.95),
-    shape: 'sphere',
-    material: plastic('#ffe0c8')
-  })
-  cuteFace(root, 1.25)
-  if (simpleBuild) {
-    scoreTag(root, '+220', '#ffe566', 2.3)
-    return
-  }
-  for (const x of [-0.55, 0.55]) {
-    part({
-      parent: root,
-      pos: Vector3.create(x, 1.35, -0.15),
-      scale: Vector3.create(0.28, 0.7, 0.28),
-      rot: Vector3.create(15, 0, x < 0 ? 25 : -25),
-      shape: 'sphere',
-      material: solid('#3a2030', 0.65)
-    })
-  }
-  part({
-    parent: root,
-    pos: Vector3.create(0, 1.7, 0.1),
-    scale: Vector3.create(0.9, 0.4, 0.7),
-    shape: 'sphere',
-    material: solid('#3a2030', 0.65)
-  })
-  for (const [x, y] of [
-    [-0.65, 1.0],
-    [0.7, 0.85],
-    [0.55, 1.55]
-  ] as const) {
-    part({
-      parent: root,
-      pos: Vector3.create(x, y, 0.35),
-      scale: Vector3.create(0.1, 0.1, 0.1),
-      shape: 'sphere',
-      material: glow('#ffe566', 2.2)
-    })
-  }
-  for (const x of [-0.55, 0.55]) {
-    part({
-      parent: root,
-      pos: Vector3.create(x, 0.55, 0.15),
-      scale: Vector3.create(0.2, 0.2, 0.2),
-      shape: 'sphere',
-      material: plastic('#ffe0c8')
-    })
-  }
-  scoreTag(root, '+220', '#ffe566', 2.3)
+  scoreTag(root, '+220', '#ffe566', 2.2, true)
 }
 
 /** Nightmare tax collector */
